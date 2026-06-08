@@ -67,6 +67,35 @@
 
 ## 4. 상세 개발 단계
 
+### 4.0 진행 상태 체크
+
+이 표는 현재 실제 산출물 기준의 진행 상태를 표시한다.
+
+| 단계 | 상태 | 근거 |
+|---:|---|---|
+| 1 | [x] 완료 | `PROJECT_DECISIONS.md`에 프로젝트 주제와 핵심 설명 작성 |
+| 2 | [~] 보강 필요 | 비회원/회원/관리자 역할은 언급했지만 별도 사용자 역할 문서 필요 |
+| 3 | [x] 완료 | `PROJECT_DECISIONS.md`, `API_DESIGN.md`에 필수 기능 범위 작성 |
+| 4 | [x] 완료 | RAG, MCP, Agent 기능 자리를 `PROJECT_DECISIONS.md`에 정리 |
+| 5 | [x] 완료 | React, FastAPI, PostgreSQL 선택을 `PROJECT_DECISIONS.md`에 정리 |
+| 6 | [x] 완료 | `ARCHITECTURE.md`에 React, FastAPI, PostgreSQL, RAG, MCP, Agent 구조 작성 |
+| 7 | [ ] 미완료 | 화면 목록 전용 문서가 아직 없음 |
+| 8 | [ ] 미완료 | 사용자 흐름 전용 문서가 아직 없음 |
+| 9 | [x] 완료 | `DATABASE_DESIGN.md`에 기본 DB 테이블 설계 작성 |
+| 10 | [x] 완료 | `DATABASE_DESIGN.md`에 AI 확장 예정 테이블 작성 |
+| 11 | [x] 완료 | `API_DESIGN.md`에 auth, posts, comments, tags, ai API 목록 작성 |
+| 12 | [x] 완료 | `API_DESIGN.md`, `PROJECT_DECISIONS.md`에 JWT 인증 방식 작성 |
+| 13 | [x] 완료 | `DATABASE_DESIGN.md`, `API_DESIGN.md`에 권한 규칙 작성 |
+| 14 | [x] 완료 | `API_DESIGN.md`에 공통 에러와 상태 코드 규칙 작성 |
+| 15 | [~] 진행 중 | `backend/`, `.gitignore` 생성. 전체 frontend/mcp-server 구조는 아직 미정 |
+| 16 | [~] 진행 중 | FastAPI 백엔드 골격 생성. 실행 확인은 아직 전 |
+| 17 | [ ] 미완료 | React 프론트 프로젝트 미생성 |
+| 18 | [ ] 미완료 | PostgreSQL 실행 환경 미정 |
+| 19 | [~] 진행 중 | `backend/.env.example` 생성. 실제 `.env`는 아직 없음 |
+| 20 | [ ] 미완료 | SQLAlchemy DB 연결 코드 미구현 |
+
+다음 정석 진행은 15~20으로 바로 가기 전에, 미완료인 6~8을 먼저 보강하는 것이다.
+
 | 단계 | 작업 | 해야 할 일 | 산출물 |
 |---:|---|---|---|
 | 1 | 프로젝트 목표 정의 | 어떤 게시판인지 한 문장으로 정리 | 프로젝트 한 줄 설명 |
