@@ -19,6 +19,16 @@ FastAPI Backend
 PostgreSQL
 ```
 
+```mermaid
+flowchart TD
+    User["사용자"] --> React["React Frontend"]
+    React -->|REST API 요청| FastAPI["FastAPI Backend"]
+    FastAPI -->|SQL 조회/저장| PostgreSQL["PostgreSQL"]
+    PostgreSQL -->|데이터 반환| FastAPI
+    FastAPI -->|JSON 응답| React
+    React -->|화면 렌더링| User
+```
+
 AI 기능이 추가된 뒤의 목표 구조는 아래와 같다.
 
 ```text
@@ -39,6 +49,29 @@ FastAPI Backend
       MCP Server
         ↓
         외부 서비스 API
+```
+
+```mermaid
+flowchart TD
+    User["사용자"] --> React["React Frontend"]
+    React -->|REST API| Backend["FastAPI Backend"]
+
+    Backend -->|CRUD 데이터| DB["PostgreSQL"]
+    Backend -->|유사 게시글 검색| RAG["RAG 기능"]
+    RAG --> Embed["Embedding Model"]
+    RAG --> Vector["Vector DB"]
+
+    Backend --> Agent["AI Agent"]
+    Agent -->|게시판 내부 지식 검색| RAG
+    Agent -->|외부 도구 호출 판단| MCPClient["MCP Client"]
+    MCPClient -->|MCP Protocol| MCPServer["MCP Server"]
+    MCPServer -->|외부 API 호출| External["GitHub 등 외부 서비스 API"]
+
+    External --> MCPServer
+    MCPServer --> MCPClient
+    MCPClient --> Agent
+    Agent --> Backend
+    Backend --> React
 ```
 
 ## 3. 각 영역의 역할
@@ -169,6 +202,21 @@ github_search_issues
 → React가 목록 화면 렌더링
 ```
 
+```mermaid
+sequenceDiagram
+    actor User as 사용자
+    participant React as React Frontend
+    participant API as FastAPI Backend
+    participant DB as PostgreSQL
+
+    User->>React: /posts 접속
+    React->>API: GET /api/posts
+    API->>DB: 게시글 목록 조회
+    DB-->>API: 게시글 목록 반환
+    API-->>React: JSON 응답
+    React-->>User: 게시글 목록 표시
+```
+
 ### 4.2 게시글 작성
 
 ```text
@@ -180,6 +228,23 @@ github_search_issues
 → FastAPI가 PostgreSQL에 게시글 저장
 → FastAPI가 생성된 게시글 JSON 반환
 → React가 상세 화면 또는 목록 화면으로 이동
+```
+
+```mermaid
+sequenceDiagram
+    actor User as 사용자
+    participant React as React Frontend
+    participant API as FastAPI Backend
+    participant DB as PostgreSQL
+
+    User->>React: 제목/내용/태그 입력
+    React->>API: POST /api/posts
+    API->>API: 로그인 여부 확인
+    API->>API: 입력값 검증
+    API->>DB: 게시글 저장
+    DB-->>API: 생성된 게시글 반환
+    API-->>React: 게시글 JSON 응답
+    React-->>User: 상세 화면으로 이동
 ```
 
 ## 5. AI 기능 요청 흐름
@@ -196,6 +261,27 @@ github_search_issues
 → React가 추천 목록 표시
 ```
 
+```mermaid
+sequenceDiagram
+    actor User as 사용자
+    participant React as React Frontend
+    participant API as FastAPI Backend
+    participant Embed as Embedding Model
+    participant Vector as Vector DB
+    participant LLM as LLM
+
+    User->>React: 글 작성 중 AI 추천 요청
+    React->>API: POST /api/ai/posts/similar
+    API->>Embed: 제목/내용 임베딩 생성
+    Embed-->>API: 임베딩 벡터
+    API->>Vector: 유사 게시글 검색
+    Vector-->>API: 유사 게시글 후보
+    API->>LLM: 유사 글 요약 요청
+    LLM-->>API: 요약 결과
+    API-->>React: 유사 게시글 추천 응답
+    React-->>User: 추천 목록 표시
+```
+
 ### 5.2 MCP 외부 정보 조회
 
 ```text
@@ -210,6 +296,31 @@ github_search_issues
 → FastAPI가 React에 응답
 ```
 
+```mermaid
+sequenceDiagram
+    actor User as 사용자
+    participant React as React Frontend
+    participant API as FastAPI Backend
+    participant Agent as AI Agent
+    participant MCPClient as MCP Client
+    participant MCPServer as MCP Server
+    participant External as GitHub API
+
+    User->>React: AI 작성 도움 요청
+    React->>API: POST /api/ai/agent/assist-writing
+    API->>Agent: Agent 실행
+    Agent->>Agent: 외부 정보 필요 여부 판단
+    Agent->>MCPClient: GitHub 검색 도구 호출 요청
+    MCPClient->>MCPServer: tools/call github_search_issues
+    MCPServer->>External: GitHub API 호출
+    External-->>MCPServer: 검색 결과
+    MCPServer-->>MCPClient: MCP tool 결과
+    MCPClient-->>Agent: 외부 검색 결과
+    Agent-->>API: 질문 개선/자료 추천
+    API-->>React: AI 도움 결과 응답
+    React-->>User: 결과 표시
+```
+
 ### 5.3 Agent 작성 도움
 
 ```text
@@ -221,6 +332,20 @@ github_search_issues
 → Agent가 필요하면 MCP tool 실행
 → Agent가 질문 개선 제안과 답변 초안 생성
 → React가 결과 표시
+```
+
+```mermaid
+flowchart TD
+    Start["사용자 입력"] --> Analyze["Agent: 질문 분석"]
+    Analyze --> NeedRAG{"유사 게시글 검색 필요?"}
+    NeedRAG -->|예| RAG["RAG 검색"]
+    NeedRAG -->|아니오| NeedMCP{"외부 정보 필요?"}
+    RAG --> NeedMCP
+    NeedMCP -->|예| MCP["MCP tool 호출"]
+    NeedMCP -->|아니오| Generate["결과 생성"]
+    MCP --> Generate
+    Generate --> Guard["루프/예외 검사"]
+    Guard --> Result["질문 개선 제안 + 답변 초안"]
 ```
 
 ## 6. 구현 우선순위
