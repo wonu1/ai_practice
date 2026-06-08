@@ -79,8 +79,8 @@
 | 4 | [x] 완료 | RAG, MCP, Agent 기능 자리를 `PROJECT_DECISIONS.md`에 정리 |
 | 5 | [x] 완료 | React, FastAPI, PostgreSQL 선택을 `PROJECT_DECISIONS.md`에 정리 |
 | 6 | [x] 완료 | `ARCHITECTURE.md`에 React, FastAPI, PostgreSQL, RAG, MCP, Agent 구조 작성 |
-| 7 | [ ] 미완료 | 화면 목록 전용 문서가 아직 없음 |
-| 8 | [ ] 미완료 | 사용자 흐름 전용 문서가 아직 없음 |
+| 7 | [x] 완료 | `SCREEN_FLOW.md`에 화면 목록 작성 |
+| 8 | [x] 완료 | `SCREEN_FLOW.md`에 사용자 흐름 작성 |
 | 9 | [x] 완료 | `DATABASE_DESIGN.md`에 기본 DB 테이블 설계 작성 |
 | 10 | [x] 완료 | `DATABASE_DESIGN.md`에 AI 확장 예정 테이블 작성 |
 | 11 | [x] 완료 | `API_DESIGN.md`에 auth, posts, comments, tags, ai API 목록 작성 |
@@ -94,7 +94,7 @@
 | 19 | [~] 진행 중 | `backend/.env.example` 생성. 실제 `.env`는 아직 없음 |
 | 20 | [ ] 미완료 | SQLAlchemy DB 연결 코드 미구현 |
 
-다음 정석 진행은 15~20으로 바로 가기 전에, 미완료인 6~8을 먼저 보강하는 것이다.
+다음 정석 진행은 15~20의 백엔드 실행 환경과 프로젝트 구조를 정리하는 것이다.
 
 | 단계 | 작업 | 해야 할 일 | 산출물 |
 |---:|---|---|---|
