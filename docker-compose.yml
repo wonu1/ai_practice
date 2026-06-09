@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: ai_board_postgres
+    restart: unless-stopped
+    # Local development credentials only. Do not reuse these values in production.
+    environment:
+      POSTGRES_DB: ai_board
+      POSTGRES_USER: ai_board_user
+      POSTGRES_PASSWORD: ai_board_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

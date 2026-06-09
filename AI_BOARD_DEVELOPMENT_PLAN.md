@@ -88,9 +88,9 @@
 | 13 | [x] 완료 | `DATABASE_DESIGN.md`, `API_DESIGN.md`에 권한 규칙 작성 |
 | 14 | [x] 완료 | `API_DESIGN.md`에 공통 에러와 상태 코드 규칙 작성 |
 | 15 | [~] 진행 중 | `backend/`, `.gitignore` 생성. 전체 frontend/mcp-server 구조는 아직 미정 |
-| 16 | [~] 진행 중 | FastAPI 백엔드 골격 생성. 실행 확인은 아직 전 |
+| 16 | [x] 완료 | FastAPI 백엔드 골격 생성 및 `/health`, `/docs` 실행 확인 |
 | 17 | [ ] 미완료 | React 프론트 프로젝트 미생성 |
-| 18 | [ ] 미완료 | PostgreSQL 실행 환경 미정 |
+| 18 | [x] 완료 | Docker Compose로 PostgreSQL 컨테이너 실행 확인 |
 | 19 | [~] 진행 중 | `backend/.env.example` 생성. 실제 `.env`는 아직 없음 |
 | 20 | [ ] 미완료 | SQLAlchemy DB 연결 코드 미구현 |
 
