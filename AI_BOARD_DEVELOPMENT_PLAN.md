@@ -91,10 +91,11 @@
 | 16 | [x] 완료 | FastAPI 백엔드 골격 생성 및 `/health`, `/docs` 실행 확인 |
 | 17 | [ ] 미완료 | React 프론트 프로젝트 미생성 |
 | 18 | [x] 완료 | Docker Compose로 PostgreSQL 컨테이너 실행 확인 |
-| 19 | [~] 진행 중 | `backend/.env.example` 생성. 실제 `.env`는 아직 없음 |
-| 20 | [ ] 미완료 | SQLAlchemy DB 연결 코드 미구현 |
+| 19 | [x] 완료 | `backend/.env.example` 작성 및 로컬 `backend/.env`로 DB 접속 정보 구성 |
+| 20 | [x] 완료 | SQLAlchemy engine/session 구성 및 PostgreSQL 연결 확인 |
+| 21 | [x] 완료 | Alembic 설정 파일과 `backend/migrations` 구조 생성 |
 
-다음 정석 진행은 15~20의 백엔드 실행 환경과 프로젝트 구조를 정리하는 것이다.
+다음 정석 진행은 DB 모델과 마이그레이션 파일을 작성해 실제 테이블 구조를 만드는 것이다.
 
 | 단계 | 작업 | 해야 할 일 | 산출물 |
 |---:|---|---|---|
