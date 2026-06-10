@@ -3,7 +3,7 @@ services:
     image: postgres:16
     container_name: ai_board_postgres
     restart: unless-stopped
-    # Local development credentials only. Do not reuse these values in production.
+    # 로컬 개발용 계정 정보입니다. 운영 환경에서는 이 값을 재사용하지 않습니다.
     environment:
       POSTGRES_DB: ai_board
       POSTGRES_USER: ai_board_user
