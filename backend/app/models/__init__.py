@@ -1,5 +1,6 @@
-"""SQLAlchemy 모델 패키지."""
+"""SQLAlchemy models package."""
 
+from backend.app.models.post import Post
 from backend.app.models.user import User
 
-__all__ = ["User"]
+__all__ = ["Post", "User"]

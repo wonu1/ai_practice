@@ -95,6 +95,7 @@
 | 20 | [x] 완료 | SQLAlchemy engine/session 구성 및 PostgreSQL 연결 확인 |
 | 21 | [x] 완료 | Alembic 설정 파일과 `backend/migrations` 구조 생성 |
 | 22 | [x] 완료 | `users` 테이블 구조를 SQLAlchemy User 모델로 구현 |
+| 23 | [x] 완료 | `posts` 테이블 구조와 User-Post 관계를 SQLAlchemy 모델로 구현 |
 
 다음 정석 진행은 DB 모델과 마이그레이션 파일을 작성해 실제 테이블 구조를 만드는 것이다.
 
