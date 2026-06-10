@@ -5,6 +5,5 @@ psycopg[binary]
 alembic
 pydantic-settings
 python-jose[cryptography]
-passlib[bcrypt]
+bcrypt
 python-multipart
-
