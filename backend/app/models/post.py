@@ -30,3 +30,7 @@ class Post(Base):
         back_populates="post",
         cascade="all, delete-orphan",
     )
+    tags: Mapped[list["Tag"]] = relationship(
+        secondary="post_tags",
+        back_populates="posts",
+    )
