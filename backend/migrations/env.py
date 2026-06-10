@@ -3,6 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from backend.app import models  # noqa: F401
 from backend.app.core.config import get_settings
 from backend.app.db.session import Base
 
@@ -15,7 +16,7 @@ if config.config_file_name is not None:
 settings = get_settings()
 config.set_main_option("sqlalchemy.url", settings.database_url)
 
-# 모델 파일이 추가되면 여기에서 import해야 Alembic이 테이블 구조를 감지할 수 있습니다.
+# 모델 파일을 import해야 Alembic이 테이블 구조를 감지할 수 있습니다.
 target_metadata = Base.metadata
 
 
