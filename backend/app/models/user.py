@@ -26,3 +26,4 @@ class User(Base):
     )
 
     posts: Mapped[list["Post"]] = relationship(back_populates="author")
+    comments: Mapped[list["Comment"]] = relationship(back_populates="author")
