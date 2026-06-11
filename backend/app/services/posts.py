@@ -1,8 +1,41 @@
 from sqlalchemy import Select, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
-from backend.app.models import Comment, Post, Tag
-from backend.app.schemas import PostListItem, PostListResponse, PostRead, UserSummary
+from backend.app.models import Comment, Post, Tag, User
+from backend.app.schemas import PostCreate, PostListItem, PostListResponse, PostRead, UserSummary
+
+
+def _normalize_tag_names(tag_names: list[str]) -> list[str]:
+    normalized_names = []
+    seen_names = set()
+
+    for tag_name in tag_names:
+        normalized_name = tag_name.strip().lower()
+        if not normalized_name or normalized_name in seen_names:
+            continue
+        normalized_names.append(normalized_name)
+        seen_names.add(normalized_name)
+
+    return normalized_names
+
+
+def _get_or_create_tags(db: Session, tag_names: list[str]) -> list[Tag]:
+    normalized_names = _normalize_tag_names(tag_names)
+    if not normalized_names:
+        return []
+
+    existing_tags = db.scalars(select(Tag).where(Tag.name.in_(normalized_names))).all()
+    existing_tag_map = {tag.name: tag for tag in existing_tags}
+
+    tags = []
+    for tag_name in normalized_names:
+        tag = existing_tag_map.get(tag_name)
+        if tag is None:
+            tag = Tag(name=tag_name)
+            db.add(tag)
+        tags.append(tag)
+
+    return tags
 
 
 def _apply_post_filters(statement: Select[tuple[Post]], keyword: str | None, tag: str | None):
@@ -63,6 +96,22 @@ def list_posts(
     ]
 
     return PostListResponse(items=items, page=page, size=size, total=total)
+
+
+def create_post(db: Session, post_create: PostCreate, author: User) -> PostRead:
+    post = Post(
+        user_id=author.id,
+        title=post_create.title,
+        content=post_create.content,
+        tags=_get_or_create_tags(db, post_create.tags),
+    )
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    post_read = get_post_detail(db, post.id)
+    if post_read is None:
+        raise RuntimeError("생성된 게시글을 다시 조회할 수 없습니다.")
+    return post_read
 
 
 def get_post_detail(db: Session, post_id: int) -> PostRead | None:
