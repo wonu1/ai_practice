@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from backend.app.api.auth import router as auth_router
+from backend.app.api.posts import router as posts_router
 
 app = FastAPI(
     title="AI Development Q&A Board API",
@@ -8,6 +9,7 @@ app = FastAPI(
 )
 
 app.include_router(auth_router, prefix="/api")
+app.include_router(posts_router, prefix="/api")
 
 
 @app.get("/health")
