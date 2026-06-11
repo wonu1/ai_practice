@@ -2,7 +2,7 @@ from sqlalchemy import Select, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from backend.app.models import Comment, Post, Tag
-from backend.app.schemas import PostListItem, PostListResponse, UserSummary
+from backend.app.schemas import PostListItem, PostListResponse, PostRead, UserSummary
 
 
 def _apply_post_filters(statement: Select[tuple[Post]], keyword: str | None, tag: str | None):
@@ -63,3 +63,26 @@ def list_posts(
     ]
 
     return PostListResponse(items=items, page=page, size=size, total=total)
+
+
+def get_post_detail(db: Session, post_id: int) -> PostRead | None:
+    post = db.scalar(
+        select(Post)
+        .where(Post.id == post_id)
+        .options(
+            selectinload(Post.author),
+            selectinload(Post.tags),
+        )
+    )
+    if post is None:
+        return None
+
+    return PostRead(
+        id=post.id,
+        title=post.title,
+        content=post.content,
+        author=UserSummary.model_validate(post.author),
+        tags=[tag.name for tag in post.tags],
+        created_at=post.created_at,
+        updated_at=post.updated_at,
+    )
