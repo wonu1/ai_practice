@@ -2,7 +2,14 @@ from sqlalchemy import Select, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from backend.app.models import Comment, Post, Tag, User
-from backend.app.schemas import PostCreate, PostListItem, PostListResponse, PostRead, UserSummary
+from backend.app.schemas import (
+    PostCreate,
+    PostListItem,
+    PostListResponse,
+    PostRead,
+    PostUpdate,
+    UserSummary,
+)
 
 
 def _normalize_tag_names(tag_names: list[str]) -> list[str]:
@@ -112,6 +119,30 @@ def create_post(db: Session, post_create: PostCreate, author: User) -> PostRead:
     if post_read is None:
         raise RuntimeError("생성된 게시글을 다시 조회할 수 없습니다.")
     return post_read
+
+
+def update_post(db: Session, post: Post, post_update: PostUpdate) -> PostRead:
+    update_data = post_update.model_dump(exclude_unset=True)
+
+    if "title" in update_data:
+        post.title = update_data["title"]
+    if "content" in update_data:
+        post.content = update_data["content"]
+    if "tags" in update_data and update_data["tags"] is not None:
+        post.tags = _get_or_create_tags(db, update_data["tags"])
+
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+
+    post_read = get_post_detail(db, post.id)
+    if post_read is None:
+        raise RuntimeError("수정된 게시글을 다시 조회할 수 없습니다.")
+    return post_read
+
+
+def get_post(db: Session, post_id: int) -> Post | None:
+    return db.get(Post, post_id)
 
 
 def get_post_detail(db: Session, post_id: int) -> PostRead | None:
