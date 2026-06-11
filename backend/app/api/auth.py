@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
+from backend.app.api.deps import get_current_user
 from backend.app.db.session import get_db
 from backend.app.core.security import create_access_token
+from backend.app.models import User
 from backend.app.schemas import LoginRequest, TokenResponse, UserCreate, UserRead
 from backend.app.services.users import (
     authenticate_user,
@@ -43,3 +45,8 @@ def login(login_request: LoginRequest, db: Session = Depends(get_db)) -> TokenRe
 
     access_token = create_access_token(subject=str(user.id))
     return TokenResponse(access_token=access_token)
+
+
+@router.get("/me", response_model=UserRead)
+def read_me(current_user: User = Depends(get_current_user)) -> UserRead:
+    return current_user
