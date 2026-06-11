@@ -141,6 +141,11 @@ def update_post(db: Session, post: Post, post_update: PostUpdate) -> PostRead:
     return post_read
 
 
+def delete_post(db: Session, post: Post) -> None:
+    db.delete(post)
+    db.commit()
+
+
 def get_post(db: Session, post_id: int) -> Post | None:
     return db.get(Post, post_id)
 

@@ -5,7 +5,14 @@ from backend.app.api.deps import get_current_user
 from backend.app.db.session import get_db
 from backend.app.models import User
 from backend.app.schemas import PostCreate, PostListResponse, PostRead, PostUpdate
-from backend.app.services.posts import create_post, get_post, get_post_detail, list_posts, update_post
+from backend.app.services.posts import (
+    create_post,
+    delete_post,
+    get_post,
+    get_post_detail,
+    list_posts,
+    update_post,
+)
 
 
 router = APIRouter(prefix="/posts", tags=["posts"])
@@ -64,3 +71,25 @@ def update_post_api(
         )
 
     return update_post(db=db, post=post, post_update=post_update)
+
+
+@router.delete("/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_post_api(
+    post_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> None:
+    post = get_post(db, post_id)
+    if post is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="게시글을 찾을 수 없습니다.",
+        )
+
+    if post.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="게시글을 삭제할 권한이 없습니다.",
+        )
+
+    delete_post(db=db, post=post)
