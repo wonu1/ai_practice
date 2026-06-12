@@ -9,3 +9,7 @@ class TagRead(TagCreate):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class TagListResponse(BaseModel):
+    items: list[TagRead]
