@@ -43,3 +43,12 @@ def create_comment(
     db.commit()
     db.refresh(comment)
     return _to_comment_read(comment)
+
+
+def get_comment(db: Session, comment_id: int) -> Comment | None:
+    return db.get(Comment, comment_id)
+
+
+def delete_comment(db: Session, comment: Comment) -> None:
+    db.delete(comment)
+    db.commit()
