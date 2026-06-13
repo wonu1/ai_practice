@@ -4,6 +4,7 @@ import type {
   CommentListResponse,
   Post,
   PostListResponse,
+  SimilarPostsResponse,
   TagListResponse,
   TokenResponse,
   User,
@@ -24,6 +25,11 @@ export type PostPayload = {
   title: string;
   content: string;
   tags: string[];
+};
+
+export type SimilarPostsPayload = PostPayload & {
+  limit?: number;
+  exclude_post_id?: number;
 };
 
 export type PostListParams = {
@@ -107,4 +113,12 @@ export function deleteComment(commentId: number, token: string) {
 
 export function getTags() {
   return apiRequest<TagListResponse>("/tags");
+}
+
+export function findSimilarPosts(payload: SimilarPostsPayload, token: string) {
+  return apiRequest<SimilarPostsResponse>("/ai/posts/similar", {
+    method: "POST",
+    body: payload,
+    token,
+  });
 }

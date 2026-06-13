@@ -63,6 +63,19 @@ export type TagListResponse = {
   items: Tag[];
 };
 
+export type SimilarPostItem = {
+  post_id: number;
+  title: string;
+  content_preview: string;
+  tag_names: string[];
+  similarity: number;
+};
+
+export type SimilarPostsResponse = {
+  summary: string | null;
+  items: SimilarPostItem[];
+};
+
 export type ApiErrorBody = {
   detail?: string;
 };

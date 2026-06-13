@@ -1,8 +1,14 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 
-import { createPost, getPost, updatePost } from "../api/boardApi";
+import {
+  createPost,
+  findSimilarPosts,
+  getPost,
+  updatePost,
+} from "../api/boardApi";
 import { ApiError } from "../api/client";
+import type { SimilarPostItem } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 
 function parseTags(value: string) {
@@ -10,6 +16,10 @@ function parseTags(value: string) {
     .split(",")
     .map((tag) => tag.trim())
     .filter(Boolean);
+}
+
+function formatSimilarity(value: number) {
+  return `${Math.round(value * 100)}%`;
 }
 
 function PostEditorPage() {
@@ -23,8 +33,12 @@ function PostEditorPage() {
   const [content, setContent] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [similarErrorMessage, setSimilarErrorMessage] = useState("");
+  const [similarSummary, setSimilarSummary] = useState<string | null>(null);
+  const [similarPosts, setSimilarPosts] = useState<SimilarPostItem[]>([]);
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFindingSimilar, setIsFindingSimilar] = useState(false);
   const [canEdit, setCanEdit] = useState(!isEditMode);
 
   useEffect(() => {
@@ -55,6 +69,40 @@ function PostEditorPage() {
 
     void loadPostForEdit();
   }, [isEditMode, isInvalidPostId, numericPostId, user]);
+
+  async function handleFindSimilarPosts() {
+    if (!token || !title.trim() || !content.trim()) {
+      return;
+    }
+
+    setSimilarErrorMessage("");
+    setSimilarSummary(null);
+    setSimilarPosts([]);
+    setIsFindingSimilar(true);
+
+    try {
+      const response = await findSimilarPosts(
+        {
+          title,
+          content,
+          tags: parseTags(tagInput),
+          limit: 5,
+          exclude_post_id: isEditMode ? numericPostId : undefined,
+        },
+        token,
+      );
+      setSimilarSummary(response.summary);
+      setSimilarPosts(response.items);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setSimilarErrorMessage(error.message);
+      } else {
+        setSimilarErrorMessage("유사 게시글을 찾는 중 문제가 발생했습니다.");
+      }
+    } finally {
+      setIsFindingSimilar(false);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -103,8 +151,8 @@ function PostEditorPage() {
           <h1>{isEditMode ? "게시글 수정" : "게시글 작성"}</h1>
           <p className="section-copy">
             {isEditMode
-              ? "기존 질문의 제목, 본문, 태그를 수정한다."
-              : "제목, 본문, 태그를 입력해 개발 질문을 게시한다."}
+              ? "기존 질문의 제목, 본문, 태그를 수정합니다."
+              : "질문을 저장하기 전에 비슷한 과거 글을 먼저 찾아볼 수 있습니다."}
           </p>
         </div>
         <Link className="secondary-button" to="/posts">
@@ -150,6 +198,65 @@ function PostEditorPage() {
               value={tagInput}
             />
           </label>
+
+          <section className="rag-panel">
+            <div className="section-title-row">
+              <div>
+                <h2>유사 글 추천</h2>
+                <p>현재 입력한 내용과 비슷한 과거 게시글을 찾아봅니다.</p>
+              </div>
+              <button
+                className="secondary-button"
+                disabled={
+                  isFindingSimilar || !title.trim() || !content.trim()
+                }
+                onClick={handleFindSimilarPosts}
+                type="button"
+              >
+                {isFindingSimilar ? "찾는 중" : "유사 글 찾기"}
+              </button>
+            </div>
+
+            {similarErrorMessage && (
+              <p className="form-error">{similarErrorMessage}</p>
+            )}
+
+            {similarSummary && (
+              <p className="rag-summary">{similarSummary}</p>
+            )}
+
+            {similarPosts.length > 0 ? (
+              <div className="similar-post-list">
+                {similarPosts.map((post) => (
+                  <Link
+                    className="similar-post-card"
+                    key={post.post_id}
+                    target="_blank"
+                    to={`/posts/${post.post_id}`}
+                  >
+                    <div>
+                      <strong>{post.title}</strong>
+                      <p>{post.content_preview}</p>
+                    </div>
+                    <div className="similar-post-meta">
+                      <span>{formatSimilarity(post.similarity)}</span>
+                      <div className="tag-list detail-tags">
+                        {post.tag_names.map((tag) => (
+                          <span className="tag-chip" key={tag}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              !isFindingSimilar && (
+                <p className="empty-state">아직 추천 결과가 없습니다.</p>
+              )
+            )}
+          </section>
 
           {errorMessage && <p className="form-error">{errorMessage}</p>}
 
