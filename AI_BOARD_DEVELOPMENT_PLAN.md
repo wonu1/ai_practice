@@ -122,6 +122,7 @@
 | 47 | [x] 완료 | Vite React 프로젝트 생성 및 React Router 기반 주요 화면 경로 설정 |
 | 48 | [x] 완료 | `frontend/src/api/client.ts`, `frontend/src/api/boardApi.ts`에 fetch 기반 API 호출 통로 구현 |
 | 49 | [x] 완료 | `localStorage` 기반 JWT 저장소와 React AuthProvider로 로그인 상태 관리 구조 구현 |
+| 50 | [x] 완료 | 로그인 폼에서 FastAPI 로그인 API를 호출하고 성공 시 JWT를 저장하도록 구현 |
 
 다음 정석 진행은 DB 모델과 마이그레이션 파일을 작성해 실제 테이블 구조를 만드는 것이다.
 

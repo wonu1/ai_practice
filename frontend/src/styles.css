@@ -95,6 +95,83 @@ p {
   margin: 0;
 }
 
+.auth-panel {
+  margin: 0 auto;
+  max-width: 520px;
+}
+
+.section-copy {
+  margin-bottom: 24px;
+}
+
+.form-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field span {
+  color: #334155;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.field input {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #172033;
+  font: inherit;
+  min-height: 44px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.field input:focus {
+  border-color: #0f9f7a;
+  box-shadow: 0 0 0 3px rgba(15, 159, 122, 0.14);
+  outline: none;
+}
+
+.primary-button {
+  background: #df3e32;
+  border: 0;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  min-height: 46px;
+  padding: 10px 16px;
+}
+
+.primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.form-error {
+  background: #fff1ef;
+  border: 1px solid #ffc8c2;
+  border-radius: 8px;
+  color: #ba1f16;
+  font-size: 14px;
+  padding: 10px 12px;
+}
+
+.form-helper {
+  font-size: 14px;
+  margin-top: 18px;
+}
+
+.form-helper a {
+  color: #df3e32;
+  font-weight: 800;
+}
+
 @media (max-width: 640px) {
   .topbar {
     align-items: flex-start;
