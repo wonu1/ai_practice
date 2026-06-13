@@ -5,8 +5,11 @@ import PostDetailPage from "./pages/PostDetailPage";
 import PostEditorPage from "./pages/PostEditorPage";
 import PostsPage from "./pages/PostsPage";
 import SignupPage from "./pages/SignupPage";
+import { useAuth } from "./auth/AuthContext";
 
 function App() {
+  const { isAuthenticated, logout, user } = useAuth();
+
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -16,8 +19,16 @@ function App() {
         <nav className="nav-links" aria-label="주요 메뉴">
           <Link to="/posts">게시글</Link>
           <Link to="/posts/new">글쓰기</Link>
-          <Link to="/login">로그인</Link>
-          <Link to="/signup">회원가입</Link>
+          {isAuthenticated ? (
+            <button className="nav-button" type="button" onClick={logout}>
+              {user?.nickname} 로그아웃
+            </button>
+          ) : (
+            <>
+              <Link to="/login">로그인</Link>
+              <Link to="/signup">회원가입</Link>
+            </>
+          )}
         </nav>
       </header>
 

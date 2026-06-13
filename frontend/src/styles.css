@@ -45,13 +45,20 @@ a {
   gap: 8px;
 }
 
-.nav-links a {
+.nav-links a,
+.nav-button {
+  background: #ffffff;
   border: 1px solid #dcebe4;
   border-radius: 8px;
   color: #334155;
+  cursor: pointer;
   font-size: 14px;
   font-weight: 700;
   padding: 8px 12px;
+}
+
+.nav-button {
+  font-family: inherit;
 }
 
 .page {
