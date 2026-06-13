@@ -15,7 +15,7 @@ function parseTags(value: string) {
 function PostEditorPage() {
   const { postId } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, token, user } = useAuth();
+  const { token, user } = useAuth();
   const isEditMode = Boolean(postId);
   const numericPostId = Number(postId);
   const isInvalidPostId = isEditMode && Number.isNaN(numericPostId);
@@ -89,16 +89,6 @@ function PostEditorPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-        state={{ from: { pathname: isEditMode ? `/posts/${postId}/edit` : "/posts/new" } }}
-      />
-    );
   }
 
   if (isInvalidPostId) {

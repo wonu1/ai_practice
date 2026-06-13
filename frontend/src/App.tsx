@@ -6,6 +6,7 @@ import PostEditorPage from "./pages/PostEditorPage";
 import PostsPage from "./pages/PostsPage";
 import SignupPage from "./pages/SignupPage";
 import { useAuth } from "./auth/AuthContext";
+import RequireAuth from "./auth/RequireAuth";
 
 function App() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -38,9 +39,23 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/posts" element={<PostsPage />} />
-          <Route path="/posts/new" element={<PostEditorPage />} />
+          <Route
+            path="/posts/new"
+            element={
+              <RequireAuth>
+                <PostEditorPage />
+              </RequireAuth>
+            }
+          />
           <Route path="/posts/:postId" element={<PostDetailPage />} />
-          <Route path="/posts/:postId/edit" element={<PostEditorPage />} />
+          <Route
+            path="/posts/:postId/edit"
+            element={
+              <RequireAuth>
+                <PostEditorPage />
+              </RequireAuth>
+            }
+          />
         </Routes>
       </main>
     </div>
