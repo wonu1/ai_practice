@@ -137,6 +137,7 @@
 | 62 | [x] 완료 | 게시글 제목 + 본문 + 태그를 임베딩 원본 텍스트로 사용하는 전략을 `PROJECT_DECISIONS.md`에 기록 |
 | 63 | [x] 완료 | `post_embeddings` 모델과 Alembic 마이그레이션으로 `vector(1536)` 저장 구조 구현 |
 | 64 | [x] 완료 | 게시글 생성 시 LangChain OpenAI embeddings로 source_text를 벡터화해 `post_embeddings`에 저장하도록 구현 |
+| 65 | [x] 완료 | 게시글 수정 시 변경된 제목, 본문, 태그 기준으로 기존 `post_embeddings` row를 갱신하도록 구현 |
 
 다음 정석 진행은 DB 모델과 마이그레이션 파일을 작성해 실제 테이블 구조를 만드는 것이다.
 

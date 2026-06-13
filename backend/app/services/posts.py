@@ -127,15 +127,21 @@ def create_post(db: Session, post_create: PostCreate, author: User) -> PostRead:
 
 def update_post(db: Session, post: Post, post_update: PostUpdate) -> PostRead:
     update_data = post_update.model_dump(exclude_unset=True)
+    tag_names: list[str] | None = None
 
     if "title" in update_data:
         post.title = update_data["title"]
     if "content" in update_data:
         post.content = update_data["content"]
     if "tags" in update_data and update_data["tags"] is not None:
-        post.tags = _get_or_create_tags(db, update_data["tags"])
+        tag_names = _normalize_tag_names(update_data["tags"])
+        post.tags = _get_or_create_tags(db, tag_names)
 
     db.add(post)
+    db.flush()
+    if tag_names is None:
+        tag_names = [tag.name for tag in post.tags]
+    upsert_post_embedding(db, post, tag_names)
     db.commit()
     db.refresh(post)
 
