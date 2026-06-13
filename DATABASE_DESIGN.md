@@ -15,7 +15,8 @@ tags
 post_tags
 ```
 
-AI 기능용 테이블은 기본 게시판 기능이 안정화된 뒤 확장한다.
+AI 기능용 테이블은 기본 게시판 기능 안정화 뒤 단계적으로 확장한다.
+현재는 RAG 기반 유사 게시글 검색을 위해 `post_embeddings` 테이블을 추가했다.
 
 ## 2. 기본 관계
 
@@ -170,28 +171,37 @@ size
 GET /posts?page=1&size=10&keyword=fastapi&tag=rag
 ```
 
-## 6. AI 기능 확장 예정 테이블
+## 6. AI 기능 확장 테이블
 
-기본 CRUD가 안정화된 뒤 아래 테이블을 추가로 검토한다.
+기본 CRUD가 안정화된 뒤 RAG, MCP, Agent 기능을 위해 아래 테이블을 단계적으로 추가한다.
 
 ### 6.1 post_embeddings
 
 게시글 임베딩을 저장한다.
 
-```text
-id
-post_id
-embedding
-embedding_model
-created_at
-updated_at
-```
+| 컬럼 | 타입 | 제약 | 설명 |
+|---|---|---|---|
+| id | bigint | PK | 임베딩 고유 ID |
+| post_id | bigint | FK, unique, not null | 임베딩 대상 게시글 ID |
+| embedding_model | varchar(100) | not null | 임베딩 생성에 사용한 모델명 |
+| source_text | text | not null | 임베딩에 사용한 원본 조합 텍스트 |
+| embedding | vector(1536) | not null | OpenAI `text-embedding-3-small` 결과 벡터 |
+| created_at | timestamp | not null | 생성 시각 |
+| updated_at | timestamp | not null | 수정 시각 |
 
 사용 목적:
 
 - RAG 기반 유사 게시글 검색
 - 중복 질문 감지
 - 게시글 추천
+
+설계 이유:
+
+- 게시글 하나당 현재 임베딩 하나를 저장하므로 `post_id`에 unique 제약을 둔다.
+- 게시글 삭제 시 임베딩도 함께 삭제되도록 `posts.id`에 `ON DELETE CASCADE`로 연결한다.
+- 검색 품질 분석과 모델 교체를 위해 `embedding_model`과 `source_text`를 함께 저장한다.
+- `text-embedding-3-small`의 기본 차원에 맞춰 `vector(1536)`을 사용한다.
+- cosine distance 검색을 빠르게 하기 위해 HNSW 인덱스를 사용한다.
 
 ### 6.2 ai_logs
 

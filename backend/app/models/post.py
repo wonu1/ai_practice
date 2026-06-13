@@ -34,3 +34,8 @@ class Post(Base):
         secondary="post_tags",
         back_populates="posts",
     )
+    embedding: Mapped["PostEmbedding | None"] = relationship(
+        back_populates="post",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )

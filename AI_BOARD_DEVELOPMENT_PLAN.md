@@ -131,6 +131,11 @@
 | 56 | [x] 완료 | 게시글 상세 화면에서 댓글 작성, 목록 갱신, 작성자 댓글 삭제 UI를 FastAPI API와 연결 |
 | 57 | [x] 완료 | `RequireAuth` 라우트 가드로 글 작성/수정 화면 접근을 로그인 사용자로 제한 |
 | 58 | [x] 완료 | 브라우저에서 회원가입, 로그인, 글 CRUD, 댓글 작성/삭제 기본 흐름 수동 테스트 통과 확인 |
+| 59 | [~] 진행 중 | LLM Provider는 OpenAI로 결정했으며, 세부 chat 모델명은 비용/성능 비교 후 확정 예정 |
+| 60 | [x] 완료 | Embedding 모델을 OpenAI `text-embedding-3-small`로 결정하고 `PROJECT_DECISIONS.md`에 기록 |
+| 61 | [x] 완료 | Vector DB를 PostgreSQL + pgvector로 결정하고 Docker DB 이미지를 `pgvector/pgvector:pg16`으로 변경 |
+| 62 | [x] 완료 | 게시글 제목 + 본문 + 태그를 임베딩 원본 텍스트로 사용하는 전략을 `PROJECT_DECISIONS.md`에 기록 |
+| 63 | [x] 완료 | `post_embeddings` 모델과 Alembic 마이그레이션으로 `vector(1536)` 저장 구조 구현 |
 
 다음 정석 진행은 DB 모델과 마이그레이션 파일을 작성해 실제 테이블 구조를 만드는 것이다.
 

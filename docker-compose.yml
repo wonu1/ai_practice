@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
     container_name: ai_board_postgres
     restart: unless-stopped
     # 로컬 개발용 계정 정보입니다. 운영 환경에서는 이 값을 재사용하지 않습니다.
