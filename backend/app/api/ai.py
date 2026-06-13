@@ -18,7 +18,7 @@ def find_similar_posts(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> SimilarPostsResponse:
-    results = search_similar_posts(
+    search_result = search_similar_posts(
         db,
         title=request.title,
         content=request.content,
@@ -26,14 +26,23 @@ def find_similar_posts(
         limit=request.limit,
         exclude_post_id=request.exclude_post_id,
     )
+    results = search_result.items
     summary = summarize_similar_posts(
         title=request.title,
         content=request.content,
         tags=request.tags,
         similar_posts=results,
     )
+    status = search_result.status
+    message = search_result.message
+
+    if results and summary is None:
+        status = "summary_failed"
+        message = "유사 게시글은 찾았지만 요약을 생성하지 못했습니다."
 
     return SimilarPostsResponse(
+        status=status,
+        message=message,
         summary=summary,
         items=[
             SimilarPostItem(

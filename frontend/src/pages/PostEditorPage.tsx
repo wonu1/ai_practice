@@ -34,6 +34,7 @@ function PostEditorPage() {
   const [tagInput, setTagInput] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [similarErrorMessage, setSimilarErrorMessage] = useState("");
+  const [similarStatusMessage, setSimilarStatusMessage] = useState("");
   const [similarSummary, setSimilarSummary] = useState<string | null>(null);
   const [similarPosts, setSimilarPosts] = useState<SimilarPostItem[]>([]);
   const [isLoading, setIsLoading] = useState(isEditMode);
@@ -76,6 +77,7 @@ function PostEditorPage() {
     }
 
     setSimilarErrorMessage("");
+    setSimilarStatusMessage("");
     setSimilarSummary(null);
     setSimilarPosts([]);
     setIsFindingSimilar(true);
@@ -93,6 +95,7 @@ function PostEditorPage() {
       );
       setSimilarSummary(response.summary);
       setSimilarPosts(response.items);
+      setSimilarStatusMessage(response.message ?? "");
     } catch (error) {
       if (error instanceof ApiError) {
         setSimilarErrorMessage(error.message);
@@ -219,6 +222,10 @@ function PostEditorPage() {
 
             {similarErrorMessage && (
               <p className="form-error">{similarErrorMessage}</p>
+            )}
+
+            {similarStatusMessage && (
+              <p className="rag-message">{similarStatusMessage}</p>
             )}
 
             {similarSummary && (

@@ -20,6 +20,13 @@ class SimilarPostResult:
     source_text: str
 
 
+@dataclass(frozen=True)
+class SimilarPostSearchResult:
+    items: list[SimilarPostResult]
+    status: str
+    message: str | None = None
+
+
 def build_post_embedding_source(title: str, content: str, tags: list[str]) -> str:
     normalized_tags = ", ".join(tag.strip().lower() for tag in tags if tag.strip())
     return f"제목: {title}\n태그: {normalized_tags}\n본문:\n{content}"
@@ -94,16 +101,24 @@ def search_similar_posts(
     tags: list[str],
     limit: int = 5,
     exclude_post_id: int | None = None,
-) -> list[SimilarPostResult]:
+) -> SimilarPostSearchResult:
     source_text = build_post_embedding_source(title, content, tags)
 
     try:
         query_vector = create_embedding_vector(source_text)
     except Exception:
-        return []
+        return SimilarPostSearchResult(
+            items=[],
+            status="search_failed",
+            message="입력한 글을 임베딩하는 중 문제가 발생했습니다.",
+        )
 
     if query_vector is None:
-        return []
+        return SimilarPostSearchResult(
+            items=[],
+            status="missing_api_key",
+            message="OpenAI API 키가 없어 유사 게시글을 찾을 수 없습니다.",
+        )
 
     distance = PostEmbedding.embedding.cosine_distance(query_vector)
     statement = (
@@ -120,9 +135,16 @@ def search_similar_posts(
     if exclude_post_id is not None:
         statement = statement.where(Post.id != exclude_post_id)
 
-    rows = db.execute(statement).all()
+    try:
+        rows = db.execute(statement).all()
+    except Exception:
+        return SimilarPostSearchResult(
+            items=[],
+            status="search_failed",
+            message="유사 게시글을 검색하는 중 문제가 발생했습니다.",
+        )
 
-    return [
+    items = [
         SimilarPostResult(
             post_id=post.id,
             title=post.title,
@@ -133,3 +155,12 @@ def search_similar_posts(
         )
         for post, row_source_text, similarity in rows
     ]
+
+    if not items:
+        return SimilarPostSearchResult(
+            items=[],
+            status="no_results",
+            message="아직 비슷한 게시글을 찾지 못했습니다.",
+        )
+
+    return SimilarPostSearchResult(items=items, status="ok")

@@ -18,5 +18,7 @@ class SimilarPostItem(BaseModel):
 
 
 class SimilarPostsResponse(BaseModel):
+    status: str = "ok"
+    message: str | None = None
     summary: str | None = None
     items: list[SimilarPostItem]

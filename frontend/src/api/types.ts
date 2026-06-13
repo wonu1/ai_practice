@@ -72,6 +72,8 @@ export type SimilarPostItem = {
 };
 
 export type SimilarPostsResponse = {
+  status: string;
+  message: string | null;
   summary: string | null;
   items: SimilarPostItem[];
 };
