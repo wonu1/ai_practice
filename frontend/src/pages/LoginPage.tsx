@@ -15,6 +15,7 @@ function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const redirectTo = location.state?.from?.pathname ?? "/posts";
+  const noticeMessage = location.state?.message;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,6 +48,8 @@ function LoginPage() {
       <p className="section-copy">
         가입한 이메일과 비밀번호로 게시판에 로그인한다.
       </p>
+
+      {noticeMessage && <p className="form-success">{noticeMessage}</p>}
 
       <form className="form-stack" onSubmit={handleSubmit}>
         <label className="field">
