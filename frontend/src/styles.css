@@ -128,7 +128,8 @@ p {
 }
 
 .field input,
-.field select {
+.field select,
+.field textarea {
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
@@ -140,10 +141,17 @@ p {
 }
 
 .field input:focus,
-.field select:focus {
+.field select:focus,
+.field textarea:focus {
   border-color: #0f9f7a;
   box-shadow: 0 0 0 3px rgba(15, 159, 122, 0.14);
   outline: none;
+}
+
+.field textarea {
+  line-height: 1.7;
+  min-height: 260px;
+  resize: vertical;
 }
 
 .primary-button {
@@ -405,6 +413,11 @@ p {
   color: #64748b;
   font-size: 13px;
   font-weight: 700;
+}
+
+.editor-panel {
+  display: grid;
+  gap: 20px;
 }
 
 @media (max-width: 640px) {
