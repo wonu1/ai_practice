@@ -1,11 +1,23 @@
 import os
+from dataclasses import dataclass
 
 from langchain_openai import OpenAIEmbeddings
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from backend.app.core.config import get_settings
 from backend.app.models import Post, PostEmbedding
+
+
+@dataclass(frozen=True)
+class SimilarPostResult:
+    post_id: int
+    title: str
+    content: str
+    tag_names: list[str]
+    similarity: float
+    source_text: str
 
 
 def build_post_embedding_source(title: str, content: str, tags: list[str]) -> str:
@@ -72,3 +84,52 @@ def upsert_post_embedding(db: Session, post: Post, tag_names: list[str]) -> None
         },
     )
     db.execute(statement)
+
+
+def search_similar_posts(
+    db: Session,
+    *,
+    title: str,
+    content: str,
+    tags: list[str],
+    limit: int = 5,
+    exclude_post_id: int | None = None,
+) -> list[SimilarPostResult]:
+    source_text = build_post_embedding_source(title, content, tags)
+
+    try:
+        query_vector = create_embedding_vector(source_text)
+    except Exception:
+        return []
+
+    if query_vector is None:
+        return []
+
+    distance = PostEmbedding.embedding.cosine_distance(query_vector)
+    statement = (
+        select(
+            Post,
+            PostEmbedding.source_text,
+            (1 - distance).label("similarity"),
+        )
+        .join(PostEmbedding, PostEmbedding.post_id == Post.id)
+        .order_by(distance)
+        .limit(limit)
+    )
+
+    if exclude_post_id is not None:
+        statement = statement.where(Post.id != exclude_post_id)
+
+    rows = db.execute(statement).all()
+
+    return [
+        SimilarPostResult(
+            post_id=post.id,
+            title=post.title,
+            content=post.content,
+            tag_names=[tag.name for tag in post.tags],
+            similarity=float(similarity),
+            source_text=row_source_text,
+        )
+        for post, row_source_text, similarity in rows
+    ]

@@ -138,6 +138,7 @@
 | 63 | [x] 완료 | `post_embeddings` 모델과 Alembic 마이그레이션으로 `vector(1536)` 저장 구조 구현 |
 | 64 | [x] 완료 | 게시글 생성 시 LangChain OpenAI embeddings로 source_text를 벡터화해 `post_embeddings`에 저장하도록 구현 |
 | 65 | [x] 완료 | 게시글 수정 시 변경된 제목, 본문, 태그 기준으로 기존 `post_embeddings` row를 갱신하도록 구현 |
+| 66 | [x] 완료 | 새 글 내용을 임베딩한 뒤 pgvector cosine distance로 기존 게시글 중 유사한 글을 찾는 내부 검색 함수 구현 |
 
 다음 정석 진행은 DB 모델과 마이그레이션 파일을 작성해 실제 테이블 구조를 만드는 것이다.
 
@@ -208,7 +209,7 @@
 | 63 | 임베딩 저장 구조 구현 | post_embeddings 또는 vector store 저장 | embedding storage |
 | 64 | 게시글 생성 시 임베딩 생성 | 글 저장 후 임베딩 생성 처리 | create embedding flow |
 | 65 | 게시글 수정 시 임베딩 갱신 | 글 변경 시 임베딩 다시 생성 | update embedding flow |
-| 66 | 유사 게시글 검색 함수 구현 | 벡터 유사도 검색 | similarity search |
+| 66 | [x] 완료 | 유사 게시글 검색 함수 구현 | 벡터 유사도 검색 |
 | 67 | RAG API 구현 | POST /ai/posts/similar | similar posts API |
 | 68 | 유사 글 요약 구현 | 검색 결과를 LLM으로 요약 | summary function |
 | 69 | 글 작성 화면에 RAG 연결 | 작성 중 유사 글 추천 표시 | RAG UI |
