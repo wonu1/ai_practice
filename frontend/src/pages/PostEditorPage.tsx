@@ -1,7 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 
-import { createPost } from "../api/boardApi";
+import { createPost, getPost, updatePost } from "../api/boardApi";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 
@@ -15,18 +15,51 @@ function parseTags(value: string) {
 function PostEditorPage() {
   const { postId } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated, token, user } = useAuth();
   const isEditMode = Boolean(postId);
+  const numericPostId = Number(postId);
+  const isInvalidPostId = isEditMode && Number.isNaN(numericPostId);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(isEditMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [canEdit, setCanEdit] = useState(!isEditMode);
+
+  useEffect(() => {
+    if (!isEditMode || isInvalidPostId) {
+      return;
+    }
+
+    async function loadPostForEdit() {
+      setIsLoading(true);
+      setErrorMessage("");
+
+      try {
+        const post = await getPost(numericPostId);
+        setTitle(post.title);
+        setContent(post.content);
+        setTagInput(post.tags.join(", "));
+        setCanEdit(Boolean(user && user.id === post.author.id));
+      } catch (error) {
+        if (error instanceof ApiError) {
+          setErrorMessage(error.message);
+        } else {
+          setErrorMessage("게시글을 불러오지 못했습니다.");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void loadPostForEdit();
+  }, [isEditMode, isInvalidPostId, numericPostId, user]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!token || isEditMode) {
+    if (!token) {
       return;
     }
 
@@ -34,20 +67,24 @@ function PostEditorPage() {
     setIsSubmitting(true);
 
     try {
-      const createdPost = await createPost(
-        {
-          title,
-          content,
-          tags: parseTags(tagInput),
-        },
-        token,
-      );
-      navigate(`/posts/${createdPost.id}`, { replace: true });
+      const payload = {
+        title,
+        content,
+        tags: parseTags(tagInput),
+      };
+
+      if (isEditMode) {
+        const updatedPost = await updatePost(numericPostId, payload, token);
+        navigate(`/posts/${updatedPost.id}`, { replace: true });
+      } else {
+        const createdPost = await createPost(payload, token);
+        navigate(`/posts/${createdPost.id}`, { replace: true });
+      }
     } catch (error) {
       if (error instanceof ApiError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("게시글 작성 중 문제가 발생했습니다.");
+        setErrorMessage("게시글 저장 중 문제가 발생했습니다.");
       }
     } finally {
       setIsSubmitting(false);
@@ -59,9 +96,13 @@ function PostEditorPage() {
       <Navigate
         to="/login"
         replace
-        state={{ from: { pathname: "/posts/new" } }}
+        state={{ from: { pathname: isEditMode ? `/posts/${postId}/edit` : "/posts/new" } }}
       />
     );
+  }
+
+  if (isInvalidPostId) {
+    return <Navigate to="/posts" replace />;
   }
 
   return (
@@ -71,7 +112,9 @@ function PostEditorPage() {
           <p className="eyebrow">Editor</p>
           <h1>{isEditMode ? "게시글 수정" : "게시글 작성"}</h1>
           <p className="section-copy">
-            제목, 본문, 태그를 입력해 개발 질문을 게시한다.
+            {isEditMode
+              ? "기존 질문의 제목, 본문, 태그를 수정한다."
+              : "제목, 본문, 태그를 입력해 개발 질문을 게시한다."}
           </p>
         </div>
         <Link className="secondary-button" to="/posts">
@@ -79,8 +122,10 @@ function PostEditorPage() {
         </Link>
       </div>
 
-      {isEditMode ? (
-        <p className="empty-state">게시글 수정은 다음 단계에서 연결한다.</p>
+      {isLoading ? (
+        <p className="empty-state">게시글을 불러오는 중입니다.</p>
+      ) : isEditMode && !canEdit ? (
+        <p className="empty-state">이 게시글을 수정할 권한이 없습니다.</p>
       ) : (
         <form className="form-stack" onSubmit={handleSubmit}>
           <label className="field">
@@ -119,7 +164,11 @@ function PostEditorPage() {
           {errorMessage && <p className="form-error">{errorMessage}</p>}
 
           <button className="primary-button" disabled={isSubmitting} type="submit">
-            {isSubmitting ? "저장 중" : "게시글 작성"}
+            {isSubmitting
+              ? "저장 중"
+              : isEditMode
+                ? "게시글 수정"
+                : "게시글 작성"}
           </button>
         </form>
       )}
