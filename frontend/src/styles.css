@@ -154,6 +154,10 @@ p {
   resize: vertical;
 }
 
+.comment-form .field textarea {
+  min-height: 110px;
+}
+
 .primary-button {
   background: #df3e32;
   border: 0;
@@ -401,18 +405,48 @@ p {
 }
 
 .comment-item {
+  align-items: flex-start;
   background: #f8fffb;
   border: 1px solid #e2eee8;
   border-radius: 8px;
-  display: grid;
+  display: flex;
   gap: 8px;
+  justify-content: space-between;
   padding: 14px;
 }
 
-.comment-item span {
+.comment-body {
+  display: grid;
+  gap: 8px;
+}
+
+.comment-body span {
   color: #64748b;
   font-size: 13px;
   font-weight: 700;
+}
+
+.comment-form {
+  display: grid;
+  gap: 10px;
+}
+
+.comment-form .secondary-button {
+  justify-self: end;
+}
+
+.text-button {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 2px 0;
+}
+
+.danger-text {
+  color: #ba1f16;
 }
 
 .editor-panel {
@@ -454,5 +488,13 @@ p {
 
   .action-group {
     justify-content: flex-start;
+  }
+
+  .comment-item {
+    display: grid;
+  }
+
+  .comment-form .secondary-button {
+    justify-self: stretch;
   }
 }
