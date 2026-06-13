@@ -119,6 +119,7 @@
 | 44 | [x] 완료 | 게시글 목록 API에서 page, size, total 기반 페이징 응답 구현 |
 | 45 | [x] 완료 | 로컬 React 개발 서버가 FastAPI를 호출할 수 있도록 제한된 CORS 허용 목록 설정 |
 | 46 | [x] 완료 | auth, posts, comments, tags 주요 API 흐름을 자동 smoke test로 검증 |
+| 47 | [x] 완료 | Vite React 프로젝트 생성 및 React Router 기반 주요 화면 경로 설정 |
 
 다음 정석 진행은 DB 모델과 마이그레이션 파일을 작성해 실제 테이블 구조를 만드는 것이다.
 
