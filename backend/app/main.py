@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.app.api.ai import router as ai_router
 from backend.app.api.auth import router as auth_router
 from backend.app.api.comments import router as comments_router
 from backend.app.api.posts import router as posts_router
@@ -25,6 +26,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router, prefix="/api")
+app.include_router(ai_router, prefix="/api")
 app.include_router(comments_router, prefix="/api")
 app.include_router(posts_router, prefix="/api")
 app.include_router(tags_router, prefix="/api")

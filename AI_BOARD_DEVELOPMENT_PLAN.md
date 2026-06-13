@@ -139,6 +139,7 @@
 | 64 | [x] 완료 | 게시글 생성 시 LangChain OpenAI embeddings로 source_text를 벡터화해 `post_embeddings`에 저장하도록 구현 |
 | 65 | [x] 완료 | 게시글 수정 시 변경된 제목, 본문, 태그 기준으로 기존 `post_embeddings` row를 갱신하도록 구현 |
 | 66 | [x] 완료 | 새 글 내용을 임베딩한 뒤 pgvector cosine distance로 기존 게시글 중 유사한 글을 찾는 내부 검색 함수 구현 |
+| 67 | [x] 완료 | 로그인 사용자가 새 글 내용을 보내면 유사 게시글 목록을 응답하는 `POST /api/ai/posts/similar` API 구현 |
 
 다음 정석 진행은 DB 모델과 마이그레이션 파일을 작성해 실제 테이블 구조를 만드는 것이다.
 
@@ -210,7 +211,7 @@
 | 64 | 게시글 생성 시 임베딩 생성 | 글 저장 후 임베딩 생성 처리 | create embedding flow |
 | 65 | 게시글 수정 시 임베딩 갱신 | 글 변경 시 임베딩 다시 생성 | update embedding flow |
 | 66 | [x] 완료 | 유사 게시글 검색 함수 구현 | 벡터 유사도 검색 |
-| 67 | RAG API 구현 | POST /ai/posts/similar | similar posts API |
+| 67 | [x] 완료 | RAG API 구현 | POST /api/ai/posts/similar |
 | 68 | 유사 글 요약 구현 | 검색 결과를 LLM으로 요약 | summary function |
 | 69 | 글 작성 화면에 RAG 연결 | 작성 중 유사 글 추천 표시 | RAG UI |
 | 70 | RAG 실패 처리 | 임베딩 실패, 검색 결과 없음 처리 | RAG error handling |
