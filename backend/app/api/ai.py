@@ -6,6 +6,7 @@ from backend.app.db.session import get_db
 from backend.app.models import User
 from backend.app.schemas import SimilarPostItem, SimilarPostsRequest, SimilarPostsResponse
 from backend.app.services.embeddings import search_similar_posts
+from backend.app.services.rag import summarize_similar_posts
 
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -25,8 +26,15 @@ def find_similar_posts(
         limit=request.limit,
         exclude_post_id=request.exclude_post_id,
     )
+    summary = summarize_similar_posts(
+        title=request.title,
+        content=request.content,
+        tags=request.tags,
+        similar_posts=results,
+    )
 
     return SimilarPostsResponse(
+        summary=summary,
         items=[
             SimilarPostItem(
                 post_id=result.post_id,

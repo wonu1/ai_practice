@@ -18,4 +18,5 @@ class SimilarPostItem(BaseModel):
 
 
 class SimilarPostsResponse(BaseModel):
+    summary: str | None = None
     items: list[SimilarPostItem]

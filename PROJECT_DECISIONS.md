@@ -50,7 +50,7 @@ Agent가 질문 개선과 답변 초안을 돕는 게시판을 만든다.
 
 ```text
 AI_PROVIDER=openai
-AI_CHAT_MODEL=추후 선택
+AI_CHAT_MODEL=gpt-5.4-mini
 AI_EMBEDDING_MODEL=text-embedding-3-small
 ```
 
