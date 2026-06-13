@@ -136,6 +136,7 @@
 | 61 | [x] 완료 | Vector DB를 PostgreSQL + pgvector로 결정하고 Docker DB 이미지를 `pgvector/pgvector:pg16`으로 변경 |
 | 62 | [x] 완료 | 게시글 제목 + 본문 + 태그를 임베딩 원본 텍스트로 사용하는 전략을 `PROJECT_DECISIONS.md`에 기록 |
 | 63 | [x] 완료 | `post_embeddings` 모델과 Alembic 마이그레이션으로 `vector(1536)` 저장 구조 구현 |
+| 64 | [x] 완료 | 게시글 생성 시 LangChain OpenAI embeddings로 source_text를 벡터화해 `post_embeddings`에 저장하도록 구현 |
 
 다음 정석 진행은 DB 모델과 마이그레이션 파일을 작성해 실제 테이블 구조를 만드는 것이다.
 

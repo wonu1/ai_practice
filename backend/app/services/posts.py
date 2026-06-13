@@ -10,6 +10,7 @@ from backend.app.schemas import (
     PostUpdate,
     UserSummary,
 )
+from backend.app.services.embeddings import upsert_post_embedding
 
 
 def _normalize_tag_names(tag_names: list[str]) -> list[str]:
@@ -106,13 +107,16 @@ def list_posts(
 
 
 def create_post(db: Session, post_create: PostCreate, author: User) -> PostRead:
+    tag_names = _normalize_tag_names(post_create.tags)
     post = Post(
         user_id=author.id,
         title=post_create.title,
         content=post_create.content,
-        tags=_get_or_create_tags(db, post_create.tags),
+        tags=_get_or_create_tags(db, tag_names),
     )
     db.add(post)
+    db.flush()
+    upsert_post_embedding(db, post, tag_names)
     db.commit()
     db.refresh(post)
     post_read = get_post_detail(db, post.id)

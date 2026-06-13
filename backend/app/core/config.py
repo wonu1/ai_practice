@@ -8,6 +8,13 @@ class Settings(BaseSettings):
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
+    openai_api_key: str | None = None
+    ai_provider: str = "openai"
+    ai_embedding_model: str = "text-embedding-3-small"
+    ai_embedding_dimension: int = 1536
+    langsmith_tracing: bool = False
+    langsmith_api_key: str | None = None
+    langsmith_project: str = "ai-board-local"
 
     model_config = SettingsConfigDict(
         env_file="backend/.env",

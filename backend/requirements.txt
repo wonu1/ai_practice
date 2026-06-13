@@ -8,3 +8,6 @@ python-jose[cryptography]
 bcrypt
 python-multipart
 pgvector
+langchain
+langchain-openai
+langsmith
