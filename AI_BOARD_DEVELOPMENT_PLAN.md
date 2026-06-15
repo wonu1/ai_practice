@@ -230,7 +230,7 @@
 | 74 | [x] 완료 | MCP Server 기본 실행 구현 | 서버 실행, transport 결정 |
 | 75 | [x] 완료 | MCP initialize 처리 확인 | MCP client와 초기 연결 확인 |
 | 76 | [x] 완료 | tools/list 구현 | 제공 도구 목록과 input schema 반환 |
-| 77 | github_search_issues 구현 | GitHub API 호출 코드 작성 | tool implementation |
+| 77 | [x] 완료 | github_search_issues 구현 | GitHub API 호출 코드 작성 |
 | 78 | MCP 환경변수 관리 | GitHub token 등 .env 처리 | MCP .env.example |
 | 79 | MCP 에러 처리 | 잘못된 입력, rate limit, timeout 처리 | MCP errors |
 | 80 | MCP 단독 테스트 | MCP inspector 또는 client로 tool 호출 | MCP test record |
