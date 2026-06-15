@@ -143,6 +143,8 @@
 | 68 | [x] 완료 | 유사 게시글 검색 결과를 OpenAI chat model로 요약해 추천 근거를 생성하는 RAG 요약 함수 구현 |
 | 69 | [x] 완료 | 글 작성/수정 화면에서 `POST /api/ai/posts/similar`를 호출해 유사 글 추천 카드와 요약을 표시 |
 | 70 | [x] 완료 | API 키 없음, 검색 실패, 결과 없음, 요약 실패 상태를 RAG 응답 메시지로 구분해 표시 |
+| 71 | [x] 완료 | MCP 1차 외부 서비스로 GitHub API를 선택하고 `github_search_issues` tool 방향을 결정 |
+| 72 | [x] 완료 | `github_search_issues`의 입력 schema, 출력 schema, 실패 상태, GitHub token 전략 정의 |
 
 다음 정석 진행은 DB 모델과 마이그레이션 파일을 작성해 실제 테이블 구조를 만드는 것이다.
 
@@ -218,8 +220,8 @@
 | 68 | [x] 완료 | 유사 글 요약 구현 | 검색 결과를 LLM으로 요약 |
 | 69 | [x] 완료 | 글 작성 화면에 RAG 연결 | 작성 중 유사 글 추천 표시 |
 | 70 | [x] 완료 | RAG 실패 처리 | 임베딩 실패, 검색 결과 없음 처리 |
-| 71 | MCP 외부 서비스 선택 | GitHub API 등 외부 서비스 선택 | MCP 대상 결정 |
-| 72 | MCP tool 설계 | github_search_issues 입력/출력 정의 | tool spec |
+| 71 | [x] 완료 | MCP 외부 서비스 선택 | GitHub API 등 외부 서비스 선택 |
+| 72 | [x] 완료 | MCP tool 설계 | github_search_issues 입력/출력 정의 |
 | 73 | MCP Server 프로젝트 생성 | 별도 mcp-server 폴더 구성 | MCP server folder |
 | 74 | MCP Server 기본 실행 구현 | 서버 실행, transport 결정 | runnable MCP server |
 | 75 | MCP initialize 처리 확인 | MCP client와 초기 연결 확인 | initialize support |

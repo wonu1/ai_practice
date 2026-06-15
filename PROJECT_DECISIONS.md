@@ -112,6 +112,116 @@ LangSmith는 LangChain 전용은 아니지만, 이 프로젝트에서는 LangCha
 | Agent | 질문 개선/답변 초안 도우미로 사용 | LangGraph 우선 검토, 단순 Agent 흐름 후 확장 가능 |
 | LLM | OpenAI 우선 사용 | 세부 chat 모델명은 비용/성능을 비교해 추후 선택 |
 
+### 3.6 MCP 외부 서비스 선택
+
+MCP는 이 프로젝트에서 백엔드나 Agent가 외부 개발 정보를 조회할 수 있게 하는 통로로 사용한다.
+
+1차 MCP 연동 대상은 GitHub API로 결정한다.
+
+| 후보 | 장점 | 단점 | 판단 |
+|---|---|---|---|
+| GitHub API | 개발 Q&A 게시판 주제와 잘 맞고, 이슈/리포지토리/문서 검색 결과를 질문 보강에 활용하기 좋다. | API token, rate limit, 검색 쿼리 제한을 고려해야 한다. | 1차 선택 |
+| 날씨/주식 API | 외부 API 연동 예제로는 단순하고 확인이 쉽다. | 개발 게시판의 핵심 문제 해결과 관련성이 낮다. | 제외 |
+| Notion API | 개인 지식 베이스 연동에는 좋다. | 사용자별 권한 설정과 OAuth 흐름이 과제 범위 대비 무거울 수 있다. | 후순위 |
+
+초기 MCP tool은 `github_search_issues`로 잡는다.
+
+```text
+입력:
+- query: 검색어
+- repository: 선택 입력, owner/name 형식
+- limit: 검색 결과 개수
+
+출력:
+- title
+- url
+- repository
+- state
+- summary
+```
+
+이 기능은 나중에 Agent가 “RAG로 내부 게시글을 찾고, MCP로 GitHub 외부 사례를 찾은 뒤 답변 초안을 만든다”는 흐름에 연결된다.
+
+### 3.7 MCP tool 상세 설계
+
+1차 MCP tool은 GitHub 이슈 검색 도구인 `github_search_issues`로 구현한다.
+
+이 tool의 목적은 사용자가 작성 중인 개발 질문과 관련된 GitHub 이슈를 찾아 외부 사례로 제공하는 것이다.
+RAG가 게시판 내부 지식을 찾는다면, MCP는 GitHub라는 외부 시스템에서 참고 자료를 가져온다.
+
+#### 입력 schema
+
+```json
+{
+  "query": "fastapi jwt 401 authorization header",
+  "repository": "tiangolo/fastapi",
+  "limit": 5
+}
+```
+
+| 필드 | 타입 | 필수 | 기본값 | 설명 |
+|---|---|---|---|---|
+| `query` | string | yes | 없음 | GitHub issue 검색어 |
+| `repository` | string | no | 없음 | `owner/name` 형식의 특정 저장소. 없으면 전체 GitHub issue 검색 |
+| `limit` | integer | no | 5 | 반환할 결과 수. 최소 1, 최대 10 |
+
+#### 출력 schema
+
+```json
+{
+  "items": [
+    {
+      "title": "OAuth2PasswordBearer returns 401",
+      "url": "https://github.com/tiangolo/fastapi/issues/1234",
+      "repository": "tiangolo/fastapi",
+      "state": "open",
+      "summary": "FastAPI 인증 헤더 처리와 관련된 이슈입니다."
+    }
+  ],
+  "status": "ok",
+  "message": null
+}
+```
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `items` | array | 검색된 GitHub issue 목록 |
+| `items[].title` | string | 이슈 제목 |
+| `items[].url` | string | GitHub issue URL |
+| `items[].repository` | string | 이슈가 속한 저장소 |
+| `items[].state` | string | `open` 또는 `closed` |
+| `items[].summary` | string | 이슈 본문 일부 또는 검색 결과 설명 |
+| `status` | string | `ok`, `no_results`, `invalid_input`, `github_error`, `rate_limited` 중 하나 |
+| `message` | string 또는 null | 사용자/개발자에게 보여줄 상태 설명 |
+
+#### 실패 상태
+
+| 상태 | 의미 | 처리 |
+|---|---|---|
+| `no_results` | 검색 결과 없음 | 빈 `items`와 안내 메시지 반환 |
+| `invalid_input` | query가 비었거나 repository 형식이 잘못됨 | GitHub API를 호출하지 않고 실패 응답 |
+| `github_error` | GitHub API 호출 실패 | 원본 에러를 숨기고 안전한 메시지 반환 |
+| `rate_limited` | GitHub rate limit 초과 | 잠시 후 재시도 안내 |
+
+#### 권한과 API key 전략
+
+초기 구현은 GitHub Personal Access Token을 환경변수로 관리한다.
+
+```text
+GITHUB_TOKEN=
+```
+
+GitHub issue 검색은 공개 데이터라 토큰 없이도 일부 호출이 가능하지만, rate limit이 낮고 과제 시연 중 실패할 수 있다.
+따라서 MCP Server는 `GITHUB_TOKEN`이 있으면 인증 요청을 사용하고, 없으면 공개 요청으로 fallback한다.
+
+프론트엔드는 GitHub token을 절대 알지 못한다.
+토큰은 MCP Server의 `.env`에서만 관리한다.
+
+#### 1차 사용 위치
+
+처음에는 MCP Server 단독 테스트로 `github_search_issues`가 잘 호출되는지 확인한다.
+그 다음 FastAPI 백엔드의 MCP Client가 이 tool을 호출하게 만들고, 마지막으로 Agent가 외부 사례 검색 도구로 사용한다.
+
 ## 4. 현재 개발 순서 결정
 
 현재는 아래 순서로 진행한다.
