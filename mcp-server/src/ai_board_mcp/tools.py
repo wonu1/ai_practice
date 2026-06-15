@@ -8,6 +8,19 @@ from ai_board_mcp.config import get_settings
 
 
 REPOSITORY_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+GITHUB_TIMEOUT_SECONDS = 10.0
+
+
+def _tool_response(
+    status: str,
+    message: str | None,
+    items: list[dict[str, str]] | None = None,
+) -> dict[str, Any]:
+    return {
+        "items": items or [],
+        "status": status,
+        "message": message,
+    }
 
 
 def _normalize_limit(limit: int) -> int:
@@ -88,18 +101,13 @@ def github_search_issues(
     normalized_limit = _normalize_limit(limit)
 
     if not normalized_query:
-        return {
-            "items": [],
-            "status": "invalid_input",
-            "message": "검색어를 입력해야 합니다.",
-        }
+        return _tool_response("invalid_input", "검색어를 입력해야 합니다.")
 
     if normalized_repository and not REPOSITORY_PATTERN.fullmatch(normalized_repository):
-        return {
-            "items": [],
-            "status": "invalid_input",
-            "message": "repository는 owner/name 형식이어야 합니다.",
-        }
+        return _tool_response(
+            "invalid_input",
+            "repository는 owner/name 형식이어야 합니다.",
+        )
 
     settings = get_settings()
     search_query = _build_search_query(normalized_query, normalized_repository)
@@ -108,7 +116,7 @@ def github_search_issues(
         with httpx.Client(
             base_url=settings.github_api_base,
             headers=_build_headers(),
-            timeout=10.0,
+            timeout=GITHUB_TIMEOUT_SECONDS,
         ) as client:
             response = client.get(
                 "/search/issues",
@@ -117,39 +125,46 @@ def github_search_issues(
                     "per_page": normalized_limit,
                 },
             )
+    except httpx.TimeoutException:
+        return _tool_response(
+            "timeout",
+            "GitHub API 응답 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.",
+        )
     except httpx.HTTPError:
-        return {
-            "items": [],
-            "status": "github_error",
-            "message": "GitHub API 호출 중 문제가 발생했습니다.",
-        }
+        return _tool_response(
+            "github_error",
+            "GitHub API 호출 중 문제가 발생했습니다.",
+        )
 
     if response.status_code in {403, 429}:
-        return {
-            "items": [],
-            "status": "rate_limited",
-            "message": "GitHub API 호출 제한에 도달했습니다. 잠시 후 다시 시도해 주세요.",
-        }
+        return _tool_response(
+            "rate_limited",
+            "GitHub API 호출 제한에 도달했습니다. 잠시 후 다시 시도해 주세요.",
+        )
+
+    if response.status_code == 422:
+        return _tool_response(
+            "invalid_input",
+            "GitHub API가 검색어 또는 repository 조건을 처리하지 못했습니다.",
+        )
 
     if response.status_code >= 400:
-        return {
-            "items": [],
-            "status": "github_error",
-            "message": "GitHub API가 검색 요청을 처리하지 못했습니다.",
-        }
+        return _tool_response(
+            "github_error",
+            "GitHub API가 검색 요청을 처리하지 못했습니다.",
+        )
 
-    data = response.json()
+    try:
+        data = response.json()
+    except ValueError:
+        return _tool_response(
+            "github_error",
+            "GitHub API 응답을 해석하지 못했습니다.",
+        )
+
     items = [_map_github_item(item) for item in data.get("items", [])]
 
     if not items:
-        return {
-            "items": [],
-            "status": "no_results",
-            "message": "관련 GitHub issue를 찾지 못했습니다.",
-        }
+        return _tool_response("no_results", "관련 GitHub issue를 찾지 못했습니다.")
 
-    return {
-        "items": items,
-        "status": "ok",
-        "message": None,
-    }
+    return _tool_response("ok", None, items)
