@@ -147,6 +147,8 @@
 | 72 | [x] 완료 | `github_search_issues`의 입력 schema, 출력 schema, 실패 상태, GitHub token 전략 정의 |
 | 73 | [x] 완료 | `mcp-server/` Python 프로젝트 골격과 환경변수 템플릿, FastMCP 서버 진입점 생성 |
 | 74 | [x] 완료 | MCP 서버 패키지를 editable install하고 `ai-board-mcp.exe` stdio 실행 대기 상태 확인 |
+| 75 | [x] 완료 | MCP stdio client로 `initialize` 요청을 보내 서버명과 protocol version 응답 확인 |
+| 76 | [x] 완료 | FastMCP에 `github_search_issues` tool을 등록하고 `tools/list`에서 input schema 노출 확인 |
 
 다음 정석 진행은 DB 모델과 마이그레이션 파일을 작성해 실제 테이블 구조를 만드는 것이다.
 
@@ -226,8 +228,8 @@
 | 72 | [x] 완료 | MCP tool 설계 | github_search_issues 입력/출력 정의 |
 | 73 | [x] 완료 | MCP Server 프로젝트 생성 | 별도 mcp-server 폴더 구성 |
 | 74 | [x] 완료 | MCP Server 기본 실행 구현 | 서버 실행, transport 결정 |
-| 75 | MCP initialize 처리 확인 | MCP client와 초기 연결 확인 | initialize support |
-| 76 | tools/list 구현 | 제공 도구 목록과 input schema 반환 | tools/list |
+| 75 | [x] 완료 | MCP initialize 처리 확인 | MCP client와 초기 연결 확인 |
+| 76 | [x] 완료 | tools/list 구현 | 제공 도구 목록과 input schema 반환 |
 | 77 | github_search_issues 구현 | GitHub API 호출 코드 작성 | tool implementation |
 | 78 | MCP 환경변수 관리 | GitHub token 등 .env 처리 | MCP .env.example |
 | 79 | MCP 에러 처리 | 잘못된 입력, rate limit, timeout 처리 | MCP errors |
