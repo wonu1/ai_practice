@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -75,6 +76,8 @@ async def search_github_issues_via_mcp(
         env=_mcp_server_env(cwd),
     )
 
+    started_at = time.perf_counter()
+
     try:
         async with stdio_client(server_params) as (read_stream, write_stream):
             async with ClientSession(read_stream, write_stream) as session:
@@ -87,10 +90,13 @@ async def search_github_issues_via_mcp(
                         "limit": limit,
                     },
                 )
-                return _read_tool_payload(result)
+                payload = _read_tool_payload(result)
+                payload["duration_ms"] = int((time.perf_counter() - started_at) * 1000)
+                return payload
     except Exception:
         return {
             "items": [],
             "status": "mcp_error",
             "message": "MCP 서버 호출 중 문제가 발생했습니다.",
+            "duration_ms": int((time.perf_counter() - started_at) * 1000),
         }

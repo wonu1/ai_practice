@@ -14,6 +14,7 @@ from backend.app.schemas import (
 )
 from backend.app.services.embeddings import search_similar_posts
 from backend.app.services.mcp_client import search_github_issues_via_mcp
+from backend.app.services.mcp_logs import create_mcp_tool_log
 from backend.app.services.rag import summarize_similar_posts
 
 
@@ -69,11 +70,24 @@ def find_similar_posts(
 async def search_github_issues(
     request: GitHubIssueSearchRequest,
     current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ) -> GitHubIssueSearchResponse:
     result = await search_github_issues_via_mcp(
         query=request.query,
         repository=request.repository,
         limit=request.limit,
+    )
+    items = result.get("items", [])
+
+    create_mcp_tool_log(
+        db,
+        user_id=current_user.id,
+        tool_name="github_search_issues",
+        status=result.get("status", "mcp_error"),
+        message=result.get("message"),
+        request_payload=request.model_dump(),
+        response_summary={"item_count": len(items)},
+        duration_ms=result.get("duration_ms"),
     )
 
     return GitHubIssueSearchResponse(
@@ -87,6 +101,6 @@ async def search_github_issues(
                 state=item.get("state", ""),
                 summary=item.get("summary", ""),
             )
-            for item in result.get("items", [])
+            for item in items
         ],
     )
