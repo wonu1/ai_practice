@@ -22,3 +22,23 @@ class SimilarPostsResponse(BaseModel):
     message: str | None = None
     summary: str | None = None
     items: list[SimilarPostItem]
+
+
+class GitHubIssueSearchRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=200)
+    repository: str | None = Field(default=None, max_length=120)
+    limit: int = Field(default=5, ge=1, le=10)
+
+
+class GitHubIssueItem(BaseModel):
+    title: str
+    url: str
+    repository: str
+    state: str
+    summary: str
+
+
+class GitHubIssueSearchResponse(BaseModel):
+    status: str = "ok"
+    message: str | None = None
+    items: list[GitHubIssueItem]

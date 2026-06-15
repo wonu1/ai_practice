@@ -11,3 +11,4 @@ pgvector
 langchain
 langchain-openai
 langsmith
+mcp[cli]

@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     langsmith_tracing: bool = False
     langsmith_api_key: str | None = None
     langsmith_project: str = "ai-board-local"
+    mcp_server_command: str | None = None
+    mcp_server_cwd: str = "mcp-server"
 
     model_config = SettingsConfigDict(
         env_file="backend/.env",

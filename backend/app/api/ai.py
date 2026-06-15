@@ -4,8 +4,16 @@ from sqlalchemy.orm import Session
 from backend.app.api.deps import get_current_user
 from backend.app.db.session import get_db
 from backend.app.models import User
-from backend.app.schemas import SimilarPostItem, SimilarPostsRequest, SimilarPostsResponse
+from backend.app.schemas import (
+    GitHubIssueItem,
+    GitHubIssueSearchRequest,
+    GitHubIssueSearchResponse,
+    SimilarPostItem,
+    SimilarPostsRequest,
+    SimilarPostsResponse,
+)
 from backend.app.services.embeddings import search_similar_posts
+from backend.app.services.mcp_client import search_github_issues_via_mcp
 from backend.app.services.rag import summarize_similar_posts
 
 
@@ -54,4 +62,31 @@ def find_similar_posts(
             )
             for result in results
         ]
+    )
+
+
+@router.post("/github/issues", response_model=GitHubIssueSearchResponse)
+async def search_github_issues(
+    request: GitHubIssueSearchRequest,
+    current_user: User = Depends(get_current_user),
+) -> GitHubIssueSearchResponse:
+    result = await search_github_issues_via_mcp(
+        query=request.query,
+        repository=request.repository,
+        limit=request.limit,
+    )
+
+    return GitHubIssueSearchResponse(
+        status=result.get("status", "mcp_error"),
+        message=result.get("message"),
+        items=[
+            GitHubIssueItem(
+                title=item.get("title", ""),
+                url=item.get("url", ""),
+                repository=item.get("repository", ""),
+                state=item.get("state", ""),
+                summary=item.get("summary", ""),
+            )
+            for item in result.get("items", [])
+        ],
     )
