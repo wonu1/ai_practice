@@ -74,7 +74,6 @@ def github_search_issues(
     query: Annotated[
         str,
         Field(
-            min_length=1,
             description="GitHub issue search query.",
         ),
     ],

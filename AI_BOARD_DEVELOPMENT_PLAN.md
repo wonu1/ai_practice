@@ -233,7 +233,7 @@
 | 77 | [x] 완료 | github_search_issues 구현 | GitHub API 호출 코드 작성 |
 | 78 | [x] 완료 | MCP 환경변수 관리 | GitHub token 등 .env 처리 |
 | 79 | [x] 완료 | MCP 에러 처리 | 잘못된 입력, rate limit, timeout 처리 |
-| 80 | MCP 단독 테스트 | MCP inspector 또는 client로 tool 호출 | MCP test record |
+| 80 | [x] 완료 | MCP 단독 테스트 | MCP stdio client로 initialize, tools/list, tools/call 확인 |
 | 81 | 백엔드에서 MCP Client 연결 | AI 백엔드가 MCP server 호출 가능하게 구성 | MCP client code |
 | 82 | MCP 호출 로그 저장 | mcp_tool_logs에 호출 결과 저장 | MCP logs |
 | 83 | Agent 역할 정의 | 질문 개선, 유사글 검색, 외부자료 조회, 답변초안 | agent responsibility |
