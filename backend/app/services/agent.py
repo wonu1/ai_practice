@@ -2,6 +2,7 @@ import json
 import os
 from typing import Any, TypedDict
 
+from langgraph.graph import END, START, StateGraph
 from langchain_openai import ChatOpenAI
 from sqlalchemy.orm import Session
 
@@ -299,6 +300,15 @@ def _build_github_query(state: AgentState) -> str:
 
 async def search_external_node(state: AgentState) -> AgentState:
     _bump_step(state)
+    state.setdefault(
+        "rag_results",
+        {
+            "status": "skipped",
+            "message": "내부 유사 글 검색을 생략했습니다.",
+            "similar_posts": [],
+            "summary": None,
+        },
+    )
     analysis = state.get("analysis")
     if not analysis or not analysis.get("needs_mcp"):
         state["mcp_results"] = {
@@ -425,3 +435,47 @@ AgentState:
         "used_sources": parsed.get("used_sources") or _build_used_sources(state),
     }
     return state
+
+
+def _route_after_analyze(state: AgentState) -> str:
+    analysis = state.get("analysis", {})
+    if analysis.get("needs_rag"):
+        return "retrieve_internal"
+    return "search_external"
+
+
+def build_agent_graph(db: Session):
+    async def retrieve_internal_graph_node(state: AgentState) -> AgentState:
+        return retrieve_internal_node(state, db)
+
+    graph = StateGraph(AgentState)
+    graph.add_node("analyze", analyze_node)
+    graph.add_node("retrieve_internal", retrieve_internal_graph_node)
+    graph.add_node("search_external", search_external_node)
+    graph.add_node("generate", generate_node)
+
+    graph.add_edge(START, "analyze")
+    graph.add_conditional_edges(
+        "analyze",
+        _route_after_analyze,
+        {
+            "retrieve_internal": "retrieve_internal",
+            "search_external": "search_external",
+        },
+    )
+    graph.add_edge("retrieve_internal", "search_external")
+    graph.add_edge("search_external", "generate")
+    graph.add_edge("generate", END)
+    return graph.compile()
+
+
+async def run_agent_graph(
+    db: Session,
+    *,
+    title: str,
+    content: str,
+    tags: list[str],
+) -> AgentState:
+    graph = build_agent_graph(db)
+    state = create_initial_agent_state(title=title, content=content, tags=tags)
+    return await graph.ainvoke(state)

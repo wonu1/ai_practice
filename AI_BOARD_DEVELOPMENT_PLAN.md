@@ -241,7 +241,7 @@
 | 85 | [x] 완료 | Agent 도구 정의 | search_internal_posts, search_github_issues 도구 입출력과 호출 제한 정의 |
 | 86 | [x] 완료 | LangGraph 구조 설계 | analyze, retrieve_internal, search_external, generate 노드와 분기 조건 정의 |
 | 87 | [x] 완료 | Agent 노드 구현 | analyze_node, retrieve_internal_node, search_external_node, generate_node 구현 |
-| 88 | Agent 조건 분기 구현 | 외부 검색 필요 여부 판단 | conditional edges |
+| 88 | [x] 완료 | Agent 조건 분기 구현 | needs_rag, needs_mcp 기반 LangGraph 조건 분기 연결 |
 | 89 | 무한 루프 방지 | max_steps, timeout, tool call limit | loop guard |
 | 90 | Agent API 구현 | POST /ai/agent/assist-writing | agent API |
 | 91 | Agent 응답 형식 설계 | similar_posts, external_refs, feedback, draft | response schema |
