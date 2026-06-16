@@ -320,6 +320,57 @@ draft: 사용자가 수정해서 쓸 수 있는 답변 또는 글 초안
 이 Agent는 자동으로 행동을 끝까지 실행하는 운영자가 아니라,
 사용자가 글을 더 잘 쓰도록 돕는 판단 보조자로 제한한다.
 
+### 3.10 Agent 상태 설계
+
+Agent 상태는 Agent가 한 번의 요청을 처리하는 동안 들고 다니는 작업 메모다.
+
+1차 구현에서는 LangGraph `State`로 옮기기 쉬운 구조를 기준으로 잡는다.
+상태는 크게 입력, 분석, 내부 검색, 외부 검색, 최종 응답, 실행 제어로 나눈다.
+
+```text
+AgentState
+├─ input
+├─ analysis
+├─ rag_results
+├─ mcp_results
+├─ final_answer
+└─ control
+```
+
+#### 상태 필드
+
+| 영역 | 필드 | 의미 |
+|---|---|---|
+| `input` | `title` | 사용자가 작성 중인 게시글 제목 |
+| `input` | `content` | 사용자가 작성 중인 게시글 본문 |
+| `input` | `tags` | 사용자가 선택하거나 입력한 태그 |
+| `analysis` | `intent` | 질문의 주제나 의도 |
+| `analysis` | `missing_info` | 답변을 위해 부족한 정보 |
+| `analysis` | `needs_rag` | 내부 유사 게시글 검색이 필요한지 여부 |
+| `analysis` | `needs_mcp` | 외부 GitHub issue 검색이 필요한지 여부 |
+| `rag_results` | `similar_posts` | RAG로 찾은 내부 유사 게시글 |
+| `rag_results` | `summary` | 유사 게시글 요약 |
+| `mcp_results` | `github_issues` | MCP로 찾은 GitHub issue 참고 자료 |
+| `mcp_results` | `status` | MCP tool 호출 상태 |
+| `final_answer` | `feedback` | 질문을 개선하기 위한 제안 |
+| `final_answer` | `draft` | 사용자가 수정해서 쓸 수 있는 답변 또는 글 초안 |
+| `final_answer` | `used_sources` | 응답 생성에 사용한 내부/외부 근거 |
+| `control` | `step_count` | Agent 진행 단계 수 |
+| `control` | `tool_call_count` | tool 호출 횟수 |
+| `control` | `errors` | 처리 중 발생한 오류 목록 |
+
+#### 상태 설계 원칙
+
+| 원칙 | 이유 |
+|---|---|
+| 입력과 결과를 분리한다 | 사용자가 쓴 원문과 Agent가 만든 결과를 섞지 않기 위해서다 |
+| RAG와 MCP 결과를 분리한다 | 내부 지식과 외부 자료의 출처를 명확히 보여주기 위해서다 |
+| 제어 상태를 둔다 | 무한 루프, 과도한 tool 호출, 예외 상황을 막기 위해서다 |
+| 최종 응답은 별도 영역에 둔다 | 프론트엔드가 `feedback`, `draft`, `sources`를 쉽게 표시하게 하기 위해서다 |
+
+1차 구현에서는 상태를 DB에 모두 저장하지 않는다.
+우선 한 번의 Agent 요청 안에서만 사용하고, 이후 `ai_logs` 단계에서 필요한 입력과 출력만 저장한다.
+
 ## 4. 현재 개발 순서 결정
 
 현재는 아래 순서로 진행한다.
