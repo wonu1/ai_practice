@@ -2,13 +2,17 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 
 import {
+  assistWritingWithAgent,
   createPost,
   findSimilarPosts,
   getPost,
   updatePost,
 } from "../api/boardApi";
 import { ApiError } from "../api/client";
-import type { SimilarPostItem } from "../api/types";
+import type {
+  AgentAssistWritingResponse,
+  SimilarPostItem,
+} from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 
 function parseTags(value: string) {
@@ -37,9 +41,14 @@ function PostEditorPage() {
   const [similarStatusMessage, setSimilarStatusMessage] = useState("");
   const [similarSummary, setSimilarSummary] = useState<string | null>(null);
   const [similarPosts, setSimilarPosts] = useState<SimilarPostItem[]>([]);
+  const [agentResult, setAgentResult] =
+    useState<AgentAssistWritingResponse | null>(null);
+  const [agentErrorMessage, setAgentErrorMessage] = useState("");
+  const [agentStatusMessage, setAgentStatusMessage] = useState("");
   const [isLoading, setIsLoading] = useState(isEditMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFindingSimilar, setIsFindingSimilar] = useState(false);
+  const [isRunningAgent, setIsRunningAgent] = useState(false);
   const [canEdit, setCanEdit] = useState(!isEditMode);
 
   useEffect(() => {
@@ -107,6 +116,38 @@ function PostEditorPage() {
     }
   }
 
+  async function handleAssistWritingWithAgent() {
+    if (!token || !title.trim() || !content.trim()) {
+      return;
+    }
+
+    setAgentErrorMessage("");
+    setAgentStatusMessage("");
+    setAgentResult(null);
+    setIsRunningAgent(true);
+
+    try {
+      const response = await assistWritingWithAgent(
+        {
+          title,
+          content,
+          tags: parseTags(tagInput),
+        },
+        token,
+      );
+      setAgentResult(response);
+      setAgentStatusMessage(response.message ?? "Agent가 글쓰기 도움 결과를 만들었습니다.");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setAgentErrorMessage(error.message);
+      } else {
+        setAgentErrorMessage("Agent를 실행하는 중 문제가 발생했습니다.");
+      }
+    } finally {
+      setIsRunningAgent(false);
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -155,7 +196,7 @@ function PostEditorPage() {
           <p className="section-copy">
             {isEditMode
               ? "기존 질문의 제목, 본문, 태그를 수정합니다."
-              : "질문을 저장하기 전에 비슷한 과거 글을 먼저 찾아볼 수 있습니다."}
+              : "질문을 저장하기 전에 비슷한 과거 글과 AI 초안을 확인할 수 있습니다."}
           </p>
         </div>
         <Link className="secondary-button" to="/posts">
@@ -228,9 +269,7 @@ function PostEditorPage() {
               <p className="rag-message">{similarStatusMessage}</p>
             )}
 
-            {similarSummary && (
-              <p className="rag-summary">{similarSummary}</p>
-            )}
+            {similarSummary && <p className="rag-summary">{similarSummary}</p>}
 
             {similarPosts.length > 0 ? (
               <div className="similar-post-list">
@@ -261,6 +300,115 @@ function PostEditorPage() {
             ) : (
               !isFindingSimilar && (
                 <p className="empty-state">아직 추천 결과가 없습니다.</p>
+              )
+            )}
+          </section>
+
+          <section className="agent-panel">
+            <div className="section-title-row">
+              <div>
+                <h2>AI 글쓰기 Agent</h2>
+                <p>
+                  내부 유사 글과 외부 GitHub 이슈를 필요에 따라 조회하고,
+                  질문 개선 피드백과 초안을 만듭니다.
+                </p>
+              </div>
+              <button
+                className="secondary-button"
+                disabled={isRunningAgent || !title.trim() || !content.trim()}
+                onClick={handleAssistWritingWithAgent}
+                type="button"
+              >
+                {isRunningAgent ? "실행 중" : "AI 도움받기"}
+              </button>
+            </div>
+
+            {agentErrorMessage && (
+              <p className="form-error">{agentErrorMessage}</p>
+            )}
+
+            {agentStatusMessage && (
+              <p className="agent-message">{agentStatusMessage}</p>
+            )}
+
+            {agentResult ? (
+              <div className="agent-result">
+                <div className="agent-block">
+                  <h3>개선 피드백</h3>
+                  {agentResult.feedback.length > 0 ? (
+                    <ul className="agent-feedback-list">
+                      {agentResult.feedback.map((feedback) => (
+                        <li key={feedback}>{feedback}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="empty-state">추가 피드백이 없습니다.</p>
+                  )}
+                </div>
+
+                <div className="agent-block">
+                  <h3>초안</h3>
+                  <p className="agent-draft">{agentResult.draft}</p>
+                </div>
+
+                {agentResult.similar_posts.length > 0 && (
+                  <div className="agent-block">
+                    <h3>참고한 내부 글</h3>
+                    <div className="similar-post-list">
+                      {agentResult.similar_posts.map((post) => (
+                        <Link
+                          className="similar-post-card"
+                          key={post.post_id}
+                          target="_blank"
+                          to={`/posts/${post.post_id}`}
+                        >
+                          <div>
+                            <strong>{post.title}</strong>
+                            <p>{post.content_preview}</p>
+                          </div>
+                          <div className="similar-post-meta">
+                            <span>{formatSimilarity(post.similarity)}</span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {agentResult.external_refs.length > 0 && (
+                  <div className="agent-block">
+                    <h3>외부 참고자료</h3>
+                    <div className="external-ref-list">
+                      {agentResult.external_refs.map((issue) => (
+                        <a
+                          className="external-ref-card"
+                          href={issue.url}
+                          key={issue.url}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          <strong>{issue.title}</strong>
+                          <span>
+                            {issue.repository} · {issue.state}
+                          </span>
+                          <p>{issue.summary}</p>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="agent-control">
+                  <span>단계 {agentResult.control.step_count}</span>
+                  <span>도구 호출 {agentResult.control.tool_call_count}</span>
+                  {agentResult.control.stopped && (
+                    <span>{agentResult.control.stop_reason}</span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              !isRunningAgent && (
+                <p className="empty-state">아직 Agent 실행 결과가 없습니다.</p>
               )
             )}
           </section>

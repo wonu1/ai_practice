@@ -1,5 +1,6 @@
 import { apiRequest } from "./client";
 import type {
+  AgentAssistWritingResponse,
   Comment,
   CommentListResponse,
   Post,
@@ -117,6 +118,14 @@ export function getTags() {
 
 export function findSimilarPosts(payload: SimilarPostsPayload, token: string) {
   return apiRequest<SimilarPostsResponse>("/ai/posts/similar", {
+    method: "POST",
+    body: payload,
+    token,
+  });
+}
+
+export function assistWritingWithAgent(payload: PostPayload, token: string) {
+  return apiRequest<AgentAssistWritingResponse>("/ai/agent/assist-writing", {
     method: "POST",
     body: payload,
     token,

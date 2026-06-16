@@ -78,6 +78,39 @@ export type SimilarPostsResponse = {
   items: SimilarPostItem[];
 };
 
+export type GitHubIssueItem = {
+  title: string;
+  url: string;
+  repository: string;
+  state: string;
+  summary: string;
+};
+
+export type AgentUsedSource = {
+  type: string;
+  title: string | null;
+  ref: string | number | null;
+};
+
+export type AgentControlInfo = {
+  step_count: number;
+  tool_call_count: number;
+  errors: string[];
+  stopped: boolean;
+  stop_reason: string | null;
+};
+
+export type AgentAssistWritingResponse = {
+  status: string;
+  message: string | null;
+  feedback: string[];
+  draft: string;
+  similar_posts: SimilarPostItem[];
+  external_refs: GitHubIssueItem[];
+  used_sources: AgentUsedSource[];
+  control: AgentControlInfo;
+};
+
 export type ApiErrorBody = {
   detail?: string;
 };
