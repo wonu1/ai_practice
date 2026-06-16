@@ -1,3 +1,5 @@
+from time import perf_counter
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -15,6 +17,7 @@ from backend.app.schemas import (
     SimilarPostsResponse,
 )
 from backend.app.services.agent import run_agent_graph
+from backend.app.services.ai_logs import create_ai_log
 from backend.app.services.embeddings import search_similar_posts
 from backend.app.services.mcp_client import search_github_issues_via_mcp
 from backend.app.services.mcp_logs import create_mcp_tool_log
@@ -56,6 +59,7 @@ def find_similar_posts(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> SimilarPostsResponse:
+    started_at = perf_counter()
     search_result = search_similar_posts(
         db,
         title=request.title,
@@ -78,7 +82,7 @@ def find_similar_posts(
         status = "summary_failed"
         message = "유사 게시글은 찾았지만 요약을 생성하지 못했습니다."
 
-    return SimilarPostsResponse(
+    response = SimilarPostsResponse(
         status=status,
         message=message,
         summary=summary,
@@ -91,8 +95,19 @@ def find_similar_posts(
                 similarity=result.similarity,
             )
             for result in results
-        ]
+        ],
     )
+    create_ai_log(
+        db,
+        user_id=current_user.id,
+        feature_name="rag_similar_posts",
+        status=response.status,
+        message=response.message,
+        input_payload=request.model_dump(mode="json"),
+        output_payload=response.model_dump(mode="json"),
+        duration_ms=int((perf_counter() - started_at) * 1000),
+    )
+    return response
 
 
 @router.post("/github/issues", response_model=GitHubIssueSearchResponse)
@@ -114,7 +129,7 @@ async def search_github_issues(
         tool_name="github_search_issues",
         status=result.get("status", "mcp_error"),
         message=result.get("message"),
-        request_payload=request.model_dump(),
+        request_payload=request.model_dump(mode="json"),
         response_summary={"item_count": len(items)},
         duration_ms=result.get("duration_ms"),
     )
@@ -132,6 +147,7 @@ async def assist_writing_with_agent(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> AgentAssistWritingResponse:
+    started_at = perf_counter()
     state = await run_agent_graph(
         db,
         title=request.title,
@@ -144,7 +160,7 @@ async def assist_writing_with_agent(
     control = state.get("control", {})
     errors = control.get("errors", [])
 
-    return AgentAssistWritingResponse(
+    response = AgentAssistWritingResponse(
         status="partial" if errors else "ok",
         message="; ".join(errors) if errors else None,
         feedback=final_answer.get("feedback", []),
@@ -154,3 +170,14 @@ async def assist_writing_with_agent(
         used_sources=final_answer.get("used_sources", []),
         control=control,
     )
+    create_ai_log(
+        db,
+        user_id=current_user.id,
+        feature_name="agent_assist_writing",
+        status=response.status,
+        message=response.message,
+        input_payload=request.model_dump(mode="json"),
+        output_payload=response.model_dump(mode="json"),
+        duration_ms=int((perf_counter() - started_at) * 1000),
+    )
+    return response

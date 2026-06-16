@@ -246,7 +246,7 @@
 | 90 | [x] 완료 | Agent API 구현 | POST /api/ai/agent/assist-writing 엔드포인트 추가 |
 | 91 | [x] 완료 | Agent 응답 형식 설계 | feedback, draft, similar_posts, external_refs, used_sources, control 스키마 확정 |
 | 92 | [x] 완료 | 글 작성 화면에 Agent 연결 | AI 도움받기 버튼과 결과 표시 |
-| 93 | AI 로그 저장 | ai_logs에 input/output 저장 | AI logs |
+| 93 | [x] 완료 | AI 로그 저장 | ai_logs에 RAG/Agent input, output, 상태, 실행 시간 저장 |
 | 94 | 백엔드 단위 테스트 작성 | auth, posts, comments 중심 | unit tests |
 | 95 | API 통합 테스트 작성 | 로그인 후 글 작성/수정/삭제 흐름 | integration tests |
 | 96 | RAG 테스트 작성 | 유사 글 검색, 결과 없음, LLM 실패 | RAG tests |
