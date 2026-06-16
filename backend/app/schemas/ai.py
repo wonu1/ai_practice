@@ -50,6 +50,20 @@ class AgentAssistWritingRequest(BaseModel):
     tags: list[str] = Field(default_factory=list)
 
 
+class AgentUsedSource(BaseModel):
+    type: str
+    title: str | None = None
+    ref: str | int | None = None
+
+
+class AgentControlInfo(BaseModel):
+    step_count: int = 0
+    tool_call_count: int = 0
+    errors: list[str] = Field(default_factory=list)
+    stopped: bool = False
+    stop_reason: str | None = None
+
+
 class AgentAssistWritingResponse(BaseModel):
     status: str = "ok"
     message: str | None = None
@@ -57,5 +71,5 @@ class AgentAssistWritingResponse(BaseModel):
     draft: str
     similar_posts: list[SimilarPostItem]
     external_refs: list[GitHubIssueItem]
-    used_sources: list[dict]
-    control: dict
+    used_sources: list[AgentUsedSource]
+    control: AgentControlInfo

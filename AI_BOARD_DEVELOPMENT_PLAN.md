@@ -244,7 +244,7 @@
 | 88 | [x] 완료 | Agent 조건 분기 구현 | needs_rag, needs_mcp 기반 LangGraph 조건 분기 연결 |
 | 89 | [x] 완료 | 무한 루프 방지 | MAX_AGENT_STEPS, MAX_TOOL_CALLS, recursion_limit 안전장치 적용 |
 | 90 | [x] 완료 | Agent API 구현 | POST /api/ai/agent/assist-writing 엔드포인트 추가 |
-| 91 | Agent 응답 형식 설계 | similar_posts, external_refs, feedback, draft | response schema |
+| 91 | [x] 완료 | Agent 응답 형식 설계 | feedback, draft, similar_posts, external_refs, used_sources, control 스키마 확정 |
 | 92 | 글 작성 화면에 Agent 연결 | AI 도움받기 버튼과 결과 표시 | Agent UI |
 | 93 | AI 로그 저장 | ai_logs에 input/output 저장 | AI logs |
 | 94 | 백엔드 단위 테스트 작성 | auth, posts, comments 중심 | unit tests |
