@@ -2,6 +2,8 @@
 
 from backend.app.schemas.auth import LoginRequest, TokenResponse
 from backend.app.schemas.ai import (
+    AgentAssistWritingRequest,
+    AgentAssistWritingResponse,
     GitHubIssueItem,
     GitHubIssueSearchRequest,
     GitHubIssueSearchResponse,
@@ -18,6 +20,8 @@ __all__ = [
     "CommentCreate",
     "CommentListResponse",
     "CommentRead",
+    "AgentAssistWritingRequest",
+    "AgentAssistWritingResponse",
     "GitHubIssueItem",
     "GitHubIssueSearchRequest",
     "GitHubIssueSearchResponse",

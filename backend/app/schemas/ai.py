@@ -42,3 +42,20 @@ class GitHubIssueSearchResponse(BaseModel):
     status: str = "ok"
     message: str | None = None
     items: list[GitHubIssueItem]
+
+
+class AgentAssistWritingRequest(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    content: str = Field(..., min_length=1)
+    tags: list[str] = Field(default_factory=list)
+
+
+class AgentAssistWritingResponse(BaseModel):
+    status: str = "ok"
+    message: str | None = None
+    feedback: list[str]
+    draft: str
+    similar_posts: list[SimilarPostItem]
+    external_refs: list[GitHubIssueItem]
+    used_sources: list[dict]
+    control: dict
