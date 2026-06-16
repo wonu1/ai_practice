@@ -279,6 +279,41 @@ Agent는 이 프로젝트에서 글쓰기 보조자 역할을 맡는다.
 → 프론트엔드에 근거와 함께 반환
 ```
 
+#### Agent 작동 흐름
+
+```mermaid
+flowchart TD
+    A["사용자가 게시글 초안 입력<br/>title, content, tags"] --> B["Agent 시작<br/>목표: 글쓰기 도움 제공"]
+    B --> C["질문 분석<br/>의도, 부족한 정보, 검색 필요성 판단"]
+    C --> D{질문이 너무 부족한가?}
+
+    D -->|예| E["추가 정보 요청/개선 제안 생성<br/>오류 메시지, 코드, 실행 환경 요청"]
+    E --> Z["최종 응답<br/>feedback 중심"]
+
+    D -->|아니오| F{내부 유사글 검색이 필요한가?}
+    F -->|예| G["RAG 도구 호출<br/>search_internal_posts"]
+    G --> H["내부 유사 게시글 저장<br/>rag_results"]
+    F -->|아니오| H2["RAG 생략<br/>rag_results 비움"]
+
+    H --> I{외부 사례 검색이 필요한가?}
+    H2 --> I
+
+    I -->|예| J["MCP 도구 호출<br/>search_github_issues"]
+    J --> K["GitHub issue 결과 저장<br/>mcp_results"]
+    I -->|아니오| K2["MCP 생략<br/>mcp_results 비움"]
+
+    K --> L["근거 통합<br/>input + analysis + RAG + MCP"]
+    K2 --> L
+    L --> M["답변/글 초안 생성<br/>feedback, draft, used_sources"]
+
+    M --> N{도구 호출 제한 초과<br/>또는 오류 발생?}
+    N -->|예| O["안전 종료<br/>가능한 결과만 반환"]
+    N -->|아니오| P["정상 종료"]
+
+    O --> Z
+    P --> Z["최종 응답 반환<br/>질문 개선 제안<br/>내부 유사글<br/>GitHub 참고자료<br/>답변 초안"]
+```
+
 #### Agent 후보 비교
 
 | 기준 | 글쓰기 보조 Agent | 자동 모더레이터 | 개인 추천 Agent |
@@ -370,6 +405,144 @@ AgentState
 
 1차 구현에서는 상태를 DB에 모두 저장하지 않는다.
 우선 한 번의 Agent 요청 안에서만 사용하고, 이후 `ai_logs` 단계에서 필요한 입력과 출력만 저장한다.
+
+### 3.11 Agent 도구 정의
+
+1차 Agent는 이미 구현한 RAG 기능과 MCP 기능을 도구로 감싸서 사용한다.
+
+새로운 외부 연동을 더 만들기보다,
+현재 동작이 검증된 내부 검색과 GitHub issue 검색을 Agent가 선택할 수 있게 한다.
+
+#### 1차 Agent 도구
+
+| 도구 이름 | 내부 구현 | 역할 |
+|---|---|---|
+| `search_internal_posts` | `search_similar_posts` | 게시판 내부 유사 글을 찾는다 |
+| `search_github_issues` | `search_github_issues_via_mcp` | GitHub issue에서 외부 참고 사례를 찾는다 |
+
+#### 도구 입출력
+
+| 도구 | 입력 | 출력 |
+|---|---|---|
+| `search_internal_posts` | `title`, `content`, `tags`, `limit` | `status`, `message`, `similar_posts`, `summary` |
+| `search_github_issues` | `query`, `repository`, `limit` | `status`, `message`, `github_issues` |
+
+#### 도구 선택 기준
+
+| 상황 | 선택 도구 | 이유 |
+|---|---|---|
+| 사용자가 게시판 안에서 이미 다룬 질문인지 확인해야 함 | `search_internal_posts` | 내부 지식과 중복 질문 여부를 먼저 보는 것이 자연스럽다 |
+| 라이브러리 오류, 프레임워크 버그, 설정 문제처럼 외부 사례가 도움됨 | `search_github_issues` | GitHub issue는 실제 개발 문제와 해결 흐름을 찾기 좋다 |
+| 질문이 너무 짧아 검색어가 불명확함 | 도구 호출 전 질문 분석 | 잘못된 검색어로 비용과 시간을 쓰지 않기 위해서다 |
+| 내부 유사 글이 충분함 | GitHub 검색 생략 가능 | 불필요한 외부 호출을 줄인다 |
+
+#### 도구 호출 제한
+
+| 제한 | 값 |
+|---|---|
+| 한 요청의 최대 tool 호출 수 | 2회 |
+| RAG 검색 최대 결과 수 | 5개 |
+| GitHub issue 검색 최대 결과 수 | 5개 |
+| 같은 도구 반복 호출 | 1차 구현에서는 금지 |
+
+이렇게 제한하는 이유는 Agent가 스스로 도구를 고를 수 있더라도,
+무한 검색이나 과도한 외부 API 호출을 막아야 하기 때문이다.
+
+#### 도구 실패 처리
+
+| 실패 상황 | 처리 방식 | 사용자에게 보여줄 내용 |
+|---|---|---|
+| RAG 검색 실패 | Agent 흐름은 계속 진행한다 | 내부 유사 글 검색에 실패했다고 표시 |
+| RAG 결과 없음 | `similar_posts`를 빈 배열로 둔다 | 비슷한 내부 게시글을 찾지 못했다고 표시 |
+| MCP 호출 실패 | GitHub 결과 없이 최종 답변을 만든다 | 외부 GitHub 검색에 실패했다고 표시 |
+| MCP rate limit | 재시도하지 않고 종료한다 | GitHub API 호출 제한 안내 |
+| 질문이 너무 짧음 | 도구 호출을 생략한다 | 검색보다 추가 정보가 필요하다고 안내 |
+
+도구 실패는 Agent 전체 실패와 다르게 본다.
+RAG나 MCP 중 하나가 실패해도 Agent는 가능한 근거만 사용해 답변해야 한다.
+
+#### 최종 도구 정의 판단
+
+1차 Agent 도구는 `search_internal_posts`와 `search_github_issues` 두 개로 유지한다.
+
+이유는 다음과 같다.
+
+```text
+RAG 요구사항을 실제로 사용한다.
+MCP 요구사항을 실제로 사용한다.
+이미 구현한 기능을 재사용하므로 구현 리스크가 낮다.
+Agent가 도구를 선택한다는 구조를 보여주기에 충분하다.
+```
+
+태그 추천, 제목 개선, 모더레이션 같은 기능은 도구로 따로 만들지 않는다.
+1차 구현에서는 최종 답변 생성 단계의 LLM 프롬프트 안에서 처리하고,
+필요하면 이후 확장 도구로 분리한다.
+
+### 3.12 LangGraph 구조 설계
+
+LangGraph는 Agent의 실행 흐름을 노드와 분기로 명시하기 위해 사용한다.
+
+1차 구조는 다음 네 개의 핵심 노드로 구성한다.
+
+```text
+analyze
+→ retrieve_internal
+→ search_external
+→ generate
+```
+
+#### 그래프 흐름
+
+```mermaid
+flowchart TD
+    A["START"] --> B["analyze<br/>질문 의도, 부족한 정보,<br/>RAG/MCP 필요 여부 판단"]
+
+    B --> C{needs_rag?}
+    C -->|true| D["retrieve_internal<br/>search_internal_posts 호출"]
+    C -->|false| E["RAG 생략"]
+
+    D --> F{needs_mcp?}
+    E --> F
+
+    F -->|true| G["search_external<br/>search_github_issues 호출"]
+    F -->|false| H["MCP 생략"]
+
+    G --> I["generate<br/>feedback, draft, used_sources 생성"]
+    H --> I
+
+    I --> J["END"]
+```
+
+#### 노드 책임
+
+| 노드 | 하는 일 | 입력 상태 | 출력 상태 |
+|---|---|---|---|
+| `analyze` | 질문 의도, 부족한 정보, 도구 필요 여부 판단 | `input` | `analysis`, `control` |
+| `retrieve_internal` | RAG로 내부 유사 게시글 검색 | `input`, `analysis` | `rag_results`, `control` |
+| `search_external` | MCP로 GitHub issue 검색 | `input`, `analysis` | `mcp_results`, `control` |
+| `generate` | 최종 개선 제안과 답변 초안 생성 | 전체 상태 | `final_answer`, `control` |
+
+#### 분기 조건
+
+| 분기 | 조건 | 이동 |
+|---|---|---|
+| 내부 검색 여부 | `analysis.needs_rag == true` | `retrieve_internal` |
+| 내부 검색 생략 | `analysis.needs_rag == false` | `search_external` 판단으로 이동 |
+| 외부 검색 여부 | `analysis.needs_mcp == true` | `search_external` |
+| 외부 검색 생략 | `analysis.needs_mcp == false` | `generate` |
+| 안전 종료 | `control.tool_call_count >= 2` 또는 치명 오류 | `generate` 또는 종료 |
+
+#### 구조 선택 이유
+
+| 선택 | 이유 |
+|---|---|
+| analyze를 첫 노드로 둔다 | 도구를 무조건 호출하지 않고 필요 여부를 먼저 판단하기 위해서다 |
+| RAG를 MCP보다 먼저 둔다 | 게시판 서비스에서는 내부 지식을 먼저 확인하는 것이 자연스럽다 |
+| MCP는 선택 호출로 둔다 | 외부 API 비용, 속도, rate limit을 줄이기 위해서다 |
+| generate를 마지막에 둔다 | 입력, 분석, 내부/외부 근거를 합쳐 사용자에게 보여줄 결과를 만들기 위해서다 |
+
+1차 구현에서는 노드가 뒤로 되돌아가는 반복 루프를 만들지 않는다.
+도구 호출은 최대 2회로 제한하고, `generate`에서 가능한 결과만 모아 응답한다.
 
 ## 4. 현재 개발 순서 결정
 

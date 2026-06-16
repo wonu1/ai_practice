@@ -238,8 +238,8 @@
 | 82 | [x] 완료 | MCP 호출 로그 저장 | mcp_tool_logs에 tool 호출 상태와 결과 요약 저장 |
 | 83 | [x] 완료 | Agent 역할 정의 | 글쓰기 보조 Agent로 질문 개선, 유사글 검색, 외부자료 조회, 답변초안 담당 |
 | 84 | [x] 완료 | Agent 상태 설계 | input, analysis, rag_results, mcp_results, final_answer, control 정의 |
-| 85 | Agent 도구 정의 | RAG search tool, MCP GitHub tool | agent tools |
-| 86 | LangGraph 구조 설계 | 노드와 분기 조건 작성 | graph design |
+| 85 | [x] 완료 | Agent 도구 정의 | search_internal_posts, search_github_issues 도구 입출력과 호출 제한 정의 |
+| 86 | [x] 완료 | LangGraph 구조 설계 | analyze, retrieve_internal, search_external, generate 노드와 분기 조건 정의 |
 | 87 | Agent 노드 구현 | analyze, retrieve, external_search, generate | graph nodes |
 | 88 | Agent 조건 분기 구현 | 외부 검색 필요 여부 판단 | conditional edges |
 | 89 | 무한 루프 방지 | max_steps, timeout, tool call limit | loop guard |
