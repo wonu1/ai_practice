@@ -14,6 +14,8 @@ from backend.app.services.rag import summarize_similar_posts
 
 MAX_TOOL_CALLS = 2
 MAX_TOOL_RESULTS = 5
+MAX_AGENT_STEPS = 6
+MAX_RECURSION_LIMIT = 10
 
 
 class AgentInput(TypedDict):
@@ -34,6 +36,8 @@ class AgentControl(TypedDict):
     step_count: int
     tool_call_count: int
     errors: list[str]
+    stopped: bool
+    stop_reason: str | None
 
 
 class AgentState(TypedDict, total=False):
@@ -61,6 +65,8 @@ def create_initial_agent_state(
             "step_count": 0,
             "tool_call_count": 0,
             "errors": [],
+            "stopped": False,
+            "stop_reason": None,
         },
     }
 
@@ -88,21 +94,45 @@ def _get_chat_client() -> ChatOpenAI | None:
     )
 
 
-def _bump_step(state: AgentState) -> None:
-    control = state.setdefault(
-        "control",
-        {"step_count": 0, "tool_call_count": 0, "errors": []},
-    )
+def _default_control() -> AgentControl:
+    return {
+        "step_count": 0,
+        "tool_call_count": 0,
+        "errors": [],
+        "stopped": False,
+        "stop_reason": None,
+    }
+
+
+def _control(state: AgentState) -> AgentControl:
+    return state.setdefault("control", _default_control())
+
+
+def _stop_agent(state: AgentState, reason: str) -> None:
+    control = _control(state)
+    control["stopped"] = True
+    control["stop_reason"] = reason
+    if reason not in control["errors"]:
+        control["errors"].append(reason)
+
+
+def _bump_step(state: AgentState) -> bool:
+    control = _control(state)
+    if control["stopped"]:
+        return False
     control["step_count"] += 1
+    if control["step_count"] > MAX_AGENT_STEPS:
+        _stop_agent(state, "Agent 단계 제한에 도달했습니다.")
+        return False
+    return True
 
 
 def _bump_tool_call(state: AgentState) -> bool:
-    control = state.setdefault(
-        "control",
-        {"step_count": 0, "tool_call_count": 0, "errors": []},
-    )
+    control = _control(state)
+    if control["stopped"]:
+        return False
     if control["tool_call_count"] >= MAX_TOOL_CALLS:
-        control["errors"].append("도구 호출 제한에 도달했습니다.")
+        _stop_agent(state, "도구 호출 제한에 도달했습니다.")
         return False
     control["tool_call_count"] += 1
     return True
@@ -111,10 +141,7 @@ def _bump_tool_call(state: AgentState) -> bool:
 def _append_error(state: AgentState, message: str | None) -> None:
     if not message:
         return
-    control = state.setdefault(
-        "control",
-        {"step_count": 0, "tool_call_count": 0, "errors": []},
-    )
+    control = _control(state)
     control["errors"].append(message)
 
 
@@ -175,7 +202,8 @@ def _fallback_analysis(agent_input: AgentInput) -> AgentAnalysis:
 
 
 def analyze_node(state: AgentState) -> AgentState:
-    _bump_step(state)
+    if not _bump_step(state):
+        return state
     agent_input = state["input"]
     client = _get_chat_client()
 
@@ -232,7 +260,8 @@ def analyze_node(state: AgentState) -> AgentState:
 
 
 def retrieve_internal_node(state: AgentState, db: Session) -> AgentState:
-    _bump_step(state)
+    if not _bump_step(state):
+        return state
     analysis = state.get("analysis")
     if not analysis or not analysis.get("needs_rag"):
         state["rag_results"] = {
@@ -299,7 +328,8 @@ def _build_github_query(state: AgentState) -> str:
 
 
 async def search_external_node(state: AgentState) -> AgentState:
-    _bump_step(state)
+    if not _bump_step(state):
+        return state
     state.setdefault(
         "rag_results",
         {
@@ -391,7 +421,8 @@ def _fallback_final_answer(state: AgentState) -> dict[str, Any]:
 
 
 def generate_node(state: AgentState) -> AgentState:
-    _bump_step(state)
+    if not _bump_step(state) and state.get("final_answer"):
+        return state
     client = _get_chat_client()
 
     if client is None:
@@ -478,4 +509,7 @@ async def run_agent_graph(
 ) -> AgentState:
     graph = build_agent_graph(db)
     state = create_initial_agent_state(title=title, content=content, tags=tags)
-    return await graph.ainvoke(state)
+    return await graph.ainvoke(
+        state,
+        config={"recursion_limit": MAX_RECURSION_LIMIT},
+    )

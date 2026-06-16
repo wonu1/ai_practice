@@ -242,7 +242,7 @@
 | 86 | [x] 완료 | LangGraph 구조 설계 | analyze, retrieve_internal, search_external, generate 노드와 분기 조건 정의 |
 | 87 | [x] 완료 | Agent 노드 구현 | analyze_node, retrieve_internal_node, search_external_node, generate_node 구현 |
 | 88 | [x] 완료 | Agent 조건 분기 구현 | needs_rag, needs_mcp 기반 LangGraph 조건 분기 연결 |
-| 89 | 무한 루프 방지 | max_steps, timeout, tool call limit | loop guard |
+| 89 | [x] 완료 | 무한 루프 방지 | MAX_AGENT_STEPS, MAX_TOOL_CALLS, recursion_limit 안전장치 적용 |
 | 90 | Agent API 구현 | POST /ai/agent/assist-writing | agent API |
 | 91 | Agent 응답 형식 설계 | similar_posts, external_refs, feedback, draft | response schema |
 | 92 | 글 작성 화면에 Agent 연결 | AI 도움받기 버튼과 결과 표시 | Agent UI |
